@@ -12,6 +12,7 @@ import {
 } from "./auth.controller";
 
 import { adminRoleAuth, bothRoleAuth } from "../middleware/bearAuth";
+import { uploadProfileImage } from "../config/upload.config"; // ✅ Import multer middleware
 
 const customer = (app: Express) => {
   // Authentication routes (public)
@@ -87,9 +88,10 @@ const customer = (app: Express) => {
     },
   );
 
-  // Update customer by ID - Both admin and user can access (users can update themselves)
+  // ✅ FIXED: Update customer by ID - multer middleware added to handle image upload
   app.route("/customer/:id").put(
     // bothRoleAuth,
+    uploadProfileImage, // ✅ This processes multipart/form-data and populates req.file
     async (req, res, next) => {
       try {
         await updateCustomerController(req, res);

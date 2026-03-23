@@ -26,7 +26,7 @@ import { adminRoleAuth, bothRoleAuth } from "../middleware/bearAuth";
 const supportRoutes = (app: Express) => {
   // Create support ticket - Farmers can create tickets
   app.route("/support/ticket").post(
-    // bothRoleAuth, // Farmers create tickets
+    bothRoleAuth, // Farmers create tickets
     async (req, res, next) => {
       try {
         await createSupportTicketController(req, res);
@@ -37,16 +37,13 @@ const supportRoutes = (app: Express) => {
   );
 
   // Get all support tickets - Admin only
-  app.route("/support/tickets").get(
-    // adminRoleAuth,
-    async (req, res, next) => {
-      try {
-        await getAllSupportTicketsController(req, res);
-      } catch (error: any) {
-        next(error);
-      }
-    },
-  );
+  app.route("/support/tickets").get(adminRoleAuth, async (req, res, next) => {
+    try {
+      await getAllSupportTicketsController(req, res);
+    } catch (error: any) {
+      next(error);
+    }
+  });
 
   // Get support ticket by ID - Both admin and farmer can access
   app.route("/support/ticket/:id").get(

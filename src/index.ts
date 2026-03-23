@@ -1,31 +1,31 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import customerRoutes from "./auth/auth.router";
 import milkRoutes from "./milk/milk.router";
 import supportRoutes from "./support/support.router";
+import feedingRouter from "./feeding/feeding.router"; // ← added
+import weatherRouter from "./weather/weather.router";
+import geminiRouter from "./gemini/gemini.router";
 
-// Load environment variables
 dotenv.config();
 
-// Initialize express app
 const app = express();
-
-// Port configuration
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors()); // Enable CORS for all routes
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+// ── Middleware ────────────────────────────────────────────────────────────────
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Health check endpoint
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     message: "🥛 Smart Daily API is running!",
@@ -48,6 +48,16 @@ app.get("/", (req: Request, res: Response) => {
         getByCollector: "GET /milk/collector/:collectorId",
         getSummary: "GET /milk/farmer/:farmerId/summary",
       },
+      feeding: {
+        create: "POST /feeding",
+        getAll: "GET /feeding/all",
+        getById: "GET /feeding/:id",
+        getByFarmer: "GET /feeding/farmer/:farmerID",
+        getByFarmerAndDate: "GET /feeding/farmer/:farmerID/date/:date",
+        getByMilkID: "GET /feeding/milk/:milkID",
+        update: "PUT /feeding/:id",
+        delete: "DELETE /feeding/:id",
+      },
       support: {
         create: "POST /support/ticket",
         getAll: "GET /support/tickets",
@@ -59,12 +69,15 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-// API Routes
-customerRoutes(app); // Auth routes (/auth/*, /customers/*, /customer/:id)
-milkRoutes(app); // Milk collection routes (/milk/*)
-supportRoutes(app); // Support ticket routes (/support/*)
+// ── Routes ────────────────────────────────────────────────────────────────────
+customerRoutes(app);
+milkRoutes(app);
+supportRoutes(app);
+app.use("/feeding", feedingRouter); // ← added
+app.use("/weather", weatherRouter);
 
-// 404 handler - Route not found
+app.use("/gemini", geminiRouter);
+// ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: "Route not found",
@@ -73,10 +86,9 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-// Global error handler
+// ── Global error handler ──────────────────────────────────────────────────────
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error("Error:", err);
-
   res.status(500).json({
     error: "Internal server error",
     message: err.message,
@@ -84,7 +96,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server
+// ── Start server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log("=".repeat(50));
   console.log("🥛  Smart Daily API Server");
@@ -93,6 +105,7 @@ app.listen(PORT, () => {
   console.log(`🌐 Base URL: http://localhost:${PORT}`);
   console.log(`📱 Android Emulator: http://10.0.2.2:${PORT}`);
   console.log(`📡 Health Check: http://localhost:${PORT}/`);
+  console.log(`📁 Uploads directory: ${path.join(__dirname, "../uploads")}`);
   console.log("=".repeat(50));
   console.log("📍 Available Endpoints:");
   console.log("   Auth:");
@@ -119,6 +132,16 @@ app.listen(PORT, () => {
   console.log("     PATCH  /milk/collection/:id/resolve");
   console.log("     DELETE /milk/collection/:id");
   console.log("");
+  console.log("   Feeding Habits:");
+  console.log("     POST   /feeding");
+  console.log("     GET    /feeding/all");
+  console.log("     GET    /feeding/:id");
+  console.log("     GET    /feeding/farmer/:farmerID");
+  console.log("     GET    /feeding/farmer/:farmerID/date/:date");
+  console.log("     GET    /feeding/milk/:milkID");
+  console.log("     PUT    /feeding/:id");
+  console.log("     DELETE /feeding/:id");
+  console.log("");
   console.log("   Support Tickets:");
   console.log("     POST   /support/ticket");
   console.log("     GET    /support/tickets");
@@ -131,12 +154,15 @@ app.listen(PORT, () => {
   console.log("     PATCH  /support/ticket/:id/response");
   console.log("     PATCH  /support/ticket/:id/resolve");
   console.log("     DELETE /support/ticket/:id");
+  console.log("");
+  console.log("   Static Files:");
+  console.log("     GET    /uploads/:filename");
   console.log("=".repeat(50));
   console.log("🚀 Server is ready to accept requests!");
   console.log("=".repeat(50));
 });
 
-// Handle graceful shutdown
+// ── Graceful shutdown ─────────────────────────────────────────────────────────
 process.on("SIGTERM", () => {
   console.log("SIGTERM signal received: closing HTTP server");
   process.exit(0);

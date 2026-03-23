@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import db from "../Drizzle/db";
-import { TIMilk, MilkTable } from "../Drizzle/schema";
+import { TIMilk, MilkTable, CustomersTable } from "../Drizzle/schema";
+import { fetchAndSaveWeatherService } from "../weather/weather.service"; // ← NEW
 
 // ── Create milk collection ──────────────────────────────────────────────────
 export const createMilkCollectionService = async (milk: TIMilk) => {
@@ -11,7 +12,40 @@ export const createMilkCollectionService = async (milk: TIMilk) => {
     if (!result || result.length === 0) {
       throw new Error("Failed to create milk collection — no rows returned");
     }
-    return result[0];
+
+    const savedMilk = result[0];
+
+    // ── Auto-fetch & save weather for this farmer + date ──────────────────
+    try {
+      // Get farmer's farm location
+      const [farmer] = await db
+        .select({ farmLocation: CustomersTable.farmLocation })
+        .from(CustomersTable)
+        .where(eq(CustomersTable.customerID, milk.farmerID));
+
+      if (farmer?.farmLocation) {
+        await fetchAndSaveWeatherService(
+          milk.farmerID,
+          farmer.farmLocation,
+          milk.collectionDate, // YYYY-MM-DD string
+        );
+        console.log(
+          `🌤️  Weather auto-saved for farmer ${milk.farmerID} on ${milk.collectionDate}`,
+        );
+      } else {
+        console.warn(
+          `⚠️  No farm location for farmer ${milk.farmerID} — weather skipped`,
+        );
+      }
+    } catch (weatherError: any) {
+      // Weather failure must NOT block milk saving
+      console.error(
+        "⚠️  Weather auto-fetch failed (milk still saved):",
+        weatherError.message,
+      );
+    }
+
+    return savedMilk;
   } catch (error: any) {
     console.error("❌ createMilkCollectionService FULL error:", {
       message: error.message,
@@ -246,7 +280,7 @@ export const getDisputedMilkCollectionsService = async () => {
   }
 };
 
-// ── Get farmer milk summary (used for payment calculation) ─────────────────
+// ── Get farmer milk summary ─────────────────────────────────────────────────
 export const getFarmerMilkSummaryService = async (
   farmerID: number,
   startDate: string,

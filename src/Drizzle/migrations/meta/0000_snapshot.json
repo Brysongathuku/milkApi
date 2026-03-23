@@ -1,5 +1,5 @@
 {
-  "id": "2be311d9-4df0-4a96-8625-895004b0aaae",
+  "id": "54713823-f0cf-427f-86bf-d5dd7d859331",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -191,6 +191,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "cow_breed": {
+          "name": "cow_breed",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "image_url": {
           "name": "image_url",
           "type": "varchar(500)",
@@ -256,6 +262,141 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.feeding_habits": {
+      "name": "feeding_habits",
+      "schema": "",
+      "columns": {
+        "feeding_id": {
+          "name": "feeding_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "farmer_id": {
+          "name": "farmer_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "milk_id": {
+          "name": "milk_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feed_type": {
+          "name": "feed_type",
+          "type": "feed_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_kg": {
+          "name": "amount_kg",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feeding_time": {
+          "name": "feeding_time",
+          "type": "feeding_time",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feeding_date": {
+          "name": "feeding_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supplement_name": {
+          "name": "supplement_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost_per_kg": {
+          "name": "cost_per_kg",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recorded_by": {
+          "name": "recorded_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "feeding_habits_farmer_id_customers_customer_id_fk": {
+          "name": "feeding_habits_farmer_id_customers_customer_id_fk",
+          "tableFrom": "feeding_habits",
+          "tableTo": "customers",
+          "columnsFrom": [
+            "farmer_id"
+          ],
+          "columnsTo": [
+            "customer_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "feeding_habits_milk_id_milk_milk_id_fk": {
+          "name": "feeding_habits_milk_id_milk_milk_id_fk",
+          "tableFrom": "feeding_habits",
+          "tableTo": "milk",
+          "columnsFrom": [
+            "milk_id"
+          ],
+          "columnsTo": [
+            "milk_id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "feeding_habits_recorded_by_customers_customer_id_fk": {
+          "name": "feeding_habits_recorded_by_customers_customer_id_fk",
+          "tableFrom": "feeding_habits",
+          "tableTo": "customers",
+          "columnsFrom": [
+            "recorded_by"
+          ],
+          "columnsTo": [
+            "customer_id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.milk": {
       "name": "milk",
       "schema": "",
@@ -276,7 +417,7 @@
           "name": "collector_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "quantity_in_liters": {
           "name": "quantity_in_liters",
@@ -561,9 +702,155 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.weather_records": {
+      "name": "weather_records",
+      "schema": "",
+      "columns": {
+        "weather_id": {
+          "name": "weather_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "farmer_id": {
+          "name": "farmer_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "record_date": {
+          "name": "record_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "temperature_celsius": {
+          "name": "temperature_celsius",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rainfall_mm": {
+          "name": "rainfall_mm",
+          "type": "numeric(6, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "humidity": {
+          "name": "humidity",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weather_condition": {
+          "name": "weather_condition",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wind_speed_kph": {
+          "name": "wind_speed_kph",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_source": {
+          "name": "data_source",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'manual'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "weather_records_farmer_id_customers_customer_id_fk": {
+          "name": "weather_records_farmer_id_customers_customer_id_fk",
+          "tableFrom": "weather_records",
+          "tableTo": "customers",
+          "columnsFrom": [
+            "farmer_id"
+          ],
+          "columnsTo": [
+            "customer_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
+    "public.cow_breed": {
+      "name": "cow_breed",
+      "schema": "public",
+      "values": [
+        "Friesian",
+        "Ayrshire",
+        "Jersey",
+        "Guernsey",
+        "Brown Swiss",
+        "Holstein",
+        "Sahiwal",
+        "Crossbreed",
+        "Other"
+      ]
+    },
+    "public.feed_type": {
+      "name": "feed_type",
+      "schema": "public",
+      "values": [
+        "Napier Grass",
+        "Maize Silage",
+        "Dairy Meal",
+        "Rhodes Grass",
+        "Lucerne",
+        "Wheat Bran",
+        "Cotton Seed Cake",
+        "Soya Bean Meal",
+        "Hay",
+        "Brewers Grain",
+        "Molasses",
+        "Mineral Supplement",
+        "Other"
+      ]
+    },
+    "public.feeding_time": {
+      "name": "feeding_time",
+      "schema": "public",
+      "values": [
+        "Morning",
+        "Afternoon",
+        "Evening",
+        "Night"
+      ]
+    },
     "public.milk_collection_status": {
       "name": "milk_collection_status",
       "schema": "public",

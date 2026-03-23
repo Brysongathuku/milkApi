@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import {
   createCustomerService,
   verifyCustomerService,
-  customerLoginService,
   getCustomerService,
   getCustomerByIdService,
   getCustomerByEmailService,
@@ -13,6 +12,7 @@ import {
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../mailer/mailer";
 import { TSCustomerLoginInput } from "../Drizzle/schema";
+import { deleteOldProfileImage } from "../config/upload.config";
 
 // Register customer controller (handles both farmers and admins)
 export const registerCustomerController = async (
@@ -25,21 +25,17 @@ export const registerCustomerController = async (
     const hashedPassword = await bcrypt.hashSync(password, 10);
     customer.password = hashedPassword;
 
-    // Generate a 6-digit verification code
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000,
     ).toString();
     customer.verificationCode = verificationCode;
     customer.isVerified = false;
 
-    // Set default role to 'user' (farmer) if not specified
     if (!customer.role) {
       customer.role = "user";
     }
 
-    // Validate farmer-specific fields if role is 'user' (farmer)
     if (customer.role === "user") {
-      // Optional: Add validation for farmer fields
       if (customer.numberOfCows && customer.numberOfCows < 0) {
         return res
           .status(400)
@@ -75,13 +71,10 @@ export const registerCustomerController = async (
   }
 };
 
-// Verify customer controller
-
 export const verifyCustomerController = async (req: Request, res: Response) => {
   try {
     const { email, verificationCode } = req.body;
 
-    // Basic validation
     if (!email || !verificationCode) {
       return res
         .status(400)
@@ -94,12 +87,10 @@ export const verifyCustomerController = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Already verified
     if (customer.isVerified) {
       return res.status(200).json({ message: "User is already verified" });
     }
 
-    // Compare verification codes (trimmed, string)
     const storedCode = String(customer.verificationCode).trim();
     const receivedCode = String(verificationCode).trim();
 
@@ -107,13 +98,10 @@ export const verifyCustomerController = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
-    // Mark customer as verified
     await verifyCustomerService(email);
 
-    // Send verification success email (non-blocking)
     try {
       const roleText = customer.role === "admin" ? "Collector" : "Farmer";
-
       await sendEmail(
         customer.email,
         "Account Verified Successfully",
@@ -137,7 +125,6 @@ export const verifyCustomerController = async (req: Request, res: Response) => {
   }
 };
 
-// Login customer controller
 export const loginCustomerController = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body as TSCustomerLoginInput;
@@ -159,14 +146,12 @@ export const loginCustomerController = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if account is verified
     if (!customerExist.isVerified) {
       return res.status(403).json({
         message: "Account not verified. Please verify your account first.",
       });
     }
 
-    // Check if account is active
     if (!customerExist.isActive) {
       return res.status(403).json({
         message: "Account is inactive. Please contact support.",
@@ -182,7 +167,6 @@ export const loginCustomerController = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Generate JWT Token
     const secret = process.env.JWT_SECRET as string;
 
     if (!secret) {
@@ -194,7 +178,6 @@ export const loginCustomerController = async (req: Request, res: Response) => {
       });
     }
 
-    // Create the JWT payload
     const payload = {
       sub: customerExist.customerID,
       user_id: customerExist.customerID,
@@ -202,13 +185,11 @@ export const loginCustomerController = async (req: Request, res: Response) => {
       last_name: customerExist.lastName,
       email: customerExist.email,
       role: customerExist.role,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3, // 3 days expiration in seconds
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3,
     };
 
-    // Generate the token
     const token = jwt.sign(payload, secret);
 
-    // Prepare user data to return (including farmer-specific fields if applicable)
     const userData: any = {
       user_id: customerExist.customerID,
       first_name: customerExist.firstName,
@@ -220,7 +201,6 @@ export const loginCustomerController = async (req: Request, res: Response) => {
       image_url: customerExist.imageUrl,
     };
 
-    // Add farmer-specific data if user is a farmer
     if (customerExist.role === "user") {
       userData.farm_location = customerExist.farmLocation;
       userData.farm_size = customerExist.farmSize;
@@ -240,7 +220,6 @@ export const loginCustomerController = async (req: Request, res: Response) => {
   }
 };
 
-// Get all customers controller (admins and farmers)
 export const getCustomerController = async (req: Request, res: Response) => {
   try {
     const customers = await getCustomerService();
@@ -248,7 +227,6 @@ export const getCustomerController = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "No customers found" });
     }
 
-    // Optionally filter by role using query parameter
     const { role } = req.query;
     let filteredCustomers = customers;
 
@@ -264,15 +242,12 @@ export const getCustomerController = async (req: Request, res: Response) => {
   }
 };
 
-// Get customer by ID controller
 export const getCustomerByIdController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const idParam = req.params.id;
-
-    // Handle string array case
     const idString = Array.isArray(idParam) ? idParam[0] : idParam;
     const id = parseInt(idString);
 
@@ -285,7 +260,6 @@ export const getCustomerByIdController = async (
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Don't return password in response
     const { password, verificationCode, ...customerData } = customer;
 
     return res.status(200).json(customerData);
@@ -294,12 +268,10 @@ export const getCustomerByIdController = async (
   }
 };
 
-// Update customer by ID controller
+// ✅ FIXED: Sanitize fields before passing to Drizzle
 export const updateCustomerController = async (req: Request, res: Response) => {
   try {
     const idParam = req.params.id;
-
-    // Handle string array case
     const idString = Array.isArray(idParam) ? idParam[0] : idParam;
     const id = parseInt(idString);
 
@@ -307,42 +279,82 @@ export const updateCustomerController = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const customer = req.body;
-
-    // Hash password if it's being updated
-    if (customer.password) {
-      customer.password = await bcrypt.hashSync(customer.password, 10);
-    }
-
-    // Validate farmer-specific fields if updating a farmer
-    if (customer.numberOfCows && customer.numberOfCows < 0) {
-      return res
-        .status(400)
-        .json({ message: "Number of cows cannot be negative" });
-    }
-
     const existingCustomer = await getCustomerByIdService(id);
     if (!existingCustomer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    const updatedCustomer = await updateCustomerService(id, customer);
-    if (!updatedCustomer) {
-      return res.status(400).json({ message: "Customer not updated" });
+    const body = req.body;
+
+    console.log("📥 Request body:", body);
+    console.log("📁 Request file:", req.file);
+
+    // ✅ Build a clean update object with only valid schema fields
+    const updateData: Record<string, any> = {};
+
+    if (body.firstName) updateData.firstName = body.firstName;
+    if (body.lastName) updateData.lastName = body.lastName;
+    if (body.contactPhone) updateData.contactPhone = body.contactPhone;
+    if (body.address) updateData.address = body.address;
+    if (body.farmLocation) updateData.farmLocation = body.farmLocation;
+    if (body.farmSize) updateData.farmSize = body.farmSize;
+
+    // ✅ numberOfCows comes in as string from multipart — parse it
+    if (body.numberOfCows !== undefined && body.numberOfCows !== "") {
+      const cows = parseInt(body.numberOfCows);
+      if (!isNaN(cows)) {
+        if (cows < 0) {
+          return res
+            .status(400)
+            .json({ message: "Number of cows cannot be negative" });
+        }
+        updateData.numberOfCows = cows;
+      }
     }
 
-    return res.status(200).json({ message: "Customer updated successfully" });
+    // ✅ Hash password only if being updated
+    if (body.password) {
+      updateData.password = await bcrypt.hashSync(body.password, 10);
+    }
+
+    // ✅ Handle uploaded profile image
+    if (req.file) {
+      if (existingCustomer.imageUrl) {
+        deleteOldProfileImage(existingCustomer.imageUrl);
+      }
+      updateData.imageUrl = `/uploads/profiles/${req.file.filename}`;
+    }
+
+    // ✅ Always update the updatedAt timestamp
+    updateData.updatedAt = new Date();
+
+    console.log("✅ Clean update data:", updateData);
+
+    await updateCustomerService(id, updateData as any);
+
+    // ✅ Fetch updated customer with null guard
+    const updatedCustomer = await getCustomerByIdService(id);
+    if (!updatedCustomer) {
+      return res
+        .status(500)
+        .json({ message: "Failed to fetch updated customer" });
+    }
+
+    const { password, verificationCode, ...customerData } = updatedCustomer;
+
+    return res.status(200).json({
+      message: "Customer updated successfully",
+      data: customerData,
+    });
   } catch (error: any) {
+    console.error("❌ Update error:", error);
     return res.status(500).json({ error: error.message });
   }
 };
 
-// Delete customer by ID controller
 export const deleteCustomerController = async (req: Request, res: Response) => {
   try {
     const idParam = req.params.id;
-
-    // Handle string array case
     const idString = Array.isArray(idParam) ? idParam[0] : idParam;
     const id = parseInt(idString);
 
@@ -353,6 +365,10 @@ export const deleteCustomerController = async (req: Request, res: Response) => {
     const existingCustomer = await getCustomerByIdService(id);
     if (!existingCustomer) {
       return res.status(404).json({ message: "Customer not found" });
+    }
+
+    if (existingCustomer.imageUrl) {
+      deleteOldProfileImage(existingCustomer.imageUrl);
     }
 
     const deleted = await deleteCustomerService(id);
@@ -366,7 +382,6 @@ export const deleteCustomerController = async (req: Request, res: Response) => {
   }
 };
 
-// Get all farmers controller (users only)
 export const getFarmersController = async (req: Request, res: Response) => {
   try {
     const farmers = await getCustomerService();
@@ -374,7 +389,6 @@ export const getFarmersController = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "No farmers found" });
     }
 
-    // Filter only farmers (role = 'user')
     const farmersList = farmers.filter((customer) => customer.role === "user");
 
     if (farmersList.length === 0) {
@@ -387,7 +401,6 @@ export const getFarmersController = async (req: Request, res: Response) => {
   }
 };
 
-// Get all admins controller (admins only)
 export const getAdminsController = async (req: Request, res: Response) => {
   try {
     const admins = await getCustomerService();
@@ -395,7 +408,6 @@ export const getAdminsController = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "No admins found" });
     }
 
-    // Filter only admins (role = 'admin')
     const adminsList = admins.filter((customer) => customer.role === "admin");
 
     if (adminsList.length === 0) {
