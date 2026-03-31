@@ -25,7 +25,7 @@ const parseId = (param: string | string[]): number => {
 
 const isValidDate = (date: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(date);
 
-// ── Create milk collection (Admin records farmer's milk) ────────────────────
+// ── Create milk collection ───────────────────────────────────────────────────
 export const createMilkCollectionController = async (
   req: Request,
   res: Response,
@@ -33,32 +33,25 @@ export const createMilkCollectionController = async (
   try {
     const body = req.body;
 
-    // ── Validate required fields ───────────────────────────────────────────
-    if (!body.farmerID || isNaN(Number(body.farmerID))) {
+    if (!body.farmerID || isNaN(Number(body.farmerID)))
       return res.status(400).json({ message: "Valid farmerID is required" });
-    }
 
-    if (!body.collectorID || isNaN(Number(body.collectorID))) {
+    if (!body.collectorID || isNaN(Number(body.collectorID)))
       return res.status(400).json({ message: "Valid collectorID is required" });
-    }
 
-    if (!body.quantityInLiters || parseFloat(body.quantityInLiters) <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Valid quantityInLiters is required (must be > 0)" });
-    }
+    if (!body.quantityInLiters || parseFloat(body.quantityInLiters) <= 0)
+      return res.status(400).json({
+        message: "Valid quantityInLiters is required (must be > 0)",
+      });
 
-    if (!body.collectionDate) {
+    if (!body.collectionDate)
       return res.status(400).json({ message: "Collection date is required" });
-    }
 
-    if (!isValidDate(body.collectionDate)) {
+    if (!isValidDate(body.collectionDate))
       return res
         .status(400)
         .json({ message: "collectionDate must be in YYYY-MM-DD format" });
-    }
 
-    // ── Build typed milk object aligned with schema ────────────────────────
     const quantity = parseFloat(body.quantityInLiters);
     const pricePerLiter = parseFloat(body.pricePerLiter ?? "50.00");
     const totalAmount = parseFloat(
@@ -86,10 +79,16 @@ export const createMilkCollectionController = async (
       disputeReason: null,
     };
 
+    // ── Service returns: savedMilk + smsDelivered ──────────────────────────
     const result = await createMilkCollectionService(milkData);
+
+    // ── Destructure smsDelivered out, put rest in data ─────────────────────
+    const { smsDelivered, ...milkRecord } = result;
+
     return res.status(201).json({
       message: "Milk collection recorded successfully",
-      data: result,
+      data: { ...milkRecord, smsDelivered }, // ← Flutter reads this
+      smsDelivered, // ← also at top level
     });
   } catch (error: any) {
     console.error("❌ createMilkCollectionController:", error);
@@ -104,95 +103,92 @@ export const createMilkCollectionController = async (
   }
 };
 
-// ── Get all milk collections ────────────────────────────────────────────────
+// ── Get all milk collections ─────────────────────────────────────────────────
 export const getAllMilkCollectionsController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const collections = await getAllMilkCollectionsService();
-    if (!collections || collections.length === 0) {
+    if (!collections || collections.length === 0)
       return res.status(404).json({ message: "No milk collections found" });
-    }
-    return res
-      .status(200)
-      .json({ message: "Collections fetched successfully", data: collections });
+
+    return res.status(200).json({
+      message: "Collections fetched successfully",
+      data: collections,
+    });
   } catch (error: any) {
     console.error("❌ getAllMilkCollectionsController:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── Get milk collection by ID ───────────────────────────────────────────────
+// ── Get milk collection by ID ────────────────────────────────────────────────
 export const getMilkCollectionByIdController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const id = parseId(req.params.id);
-    if (isNaN(id)) {
+    if (isNaN(id))
       return res.status(400).json({ message: "Invalid milk collection ID" });
-    }
 
     const collection = await getMilkCollectionByIdService(id);
-    if (!collection) {
+    if (!collection)
       return res.status(404).json({ message: "Milk collection not found" });
-    }
-    return res
-      .status(200)
-      .json({ message: "Collection fetched successfully", data: collection });
+
+    return res.status(200).json({
+      message: "Collection fetched successfully",
+      data: collection,
+    });
   } catch (error: any) {
     console.error("❌ getMilkCollectionByIdController:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── Get milk collections by farmer ID ──────────────────────────────────────
+// ── Get milk collections by farmer ──────────────────────────────────────────
 export const getMilkCollectionsByFarmerController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const farmerID = parseId(req.params.farmerId);
-    if (isNaN(farmerID)) {
+    if (isNaN(farmerID))
       return res.status(400).json({ message: "Invalid farmer ID" });
-    }
 
     const collections = await getMilkCollectionsByFarmerService(farmerID);
-    if (!collections || collections.length === 0) {
+    if (!collections || collections.length === 0)
       return res
         .status(404)
         .json({ message: "No collections found for this farmer" });
-    }
-    return res
-      .status(200)
-      .json({
-        message: "Farmer collections fetched successfully",
-        data: collections,
-      });
+
+    return res.status(200).json({
+      message: "Farmer collections fetched successfully",
+      data: collections,
+    });
   } catch (error: any) {
     console.error("❌ getMilkCollectionsByFarmerController:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── Get milk collections by collector ID ───────────────────────────────────
+// ── Get milk collections by collector ───────────────────────────────────────
 export const getMilkCollectionsByCollectorController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const collectorID = parseId(req.params.collectorId);
-    if (isNaN(collectorID)) {
+    if (isNaN(collectorID))
       return res.status(400).json({ message: "Invalid collector ID" });
-    }
 
     const collections = await getMilkCollectionsByCollectorService(collectorID);
-    if (!collections || collections.length === 0) {
+    if (!collections || collections.length === 0)
       return res
         .status(404)
         .json({ message: "No collections found for this collector" });
-    }
+
     return res.status(200).json({
       message: "Collector collections fetched successfully",
       data: collections,
@@ -203,8 +199,7 @@ export const getMilkCollectionsByCollectorController = async (
   }
 };
 
-// ── Get milk collections by date range ─────────────────────────────────────
-// GET /milk/collections/date-range?startDate=2026-01-01&endDate=2026-01-31
+// ── Get milk collections by date range ──────────────────────────────────────
 export const getMilkCollectionsByDateRangeController = async (
   req: Request,
   res: Response,
@@ -212,36 +207,31 @@ export const getMilkCollectionsByDateRangeController = async (
   try {
     const { startDate, endDate } = req.query;
 
-    if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({
-          message: "Both startDate and endDate query params are required",
-        });
-    }
+    if (!startDate || !endDate)
+      return res.status(400).json({
+        message: "Both startDate and endDate query params are required",
+      });
 
-    if (!isValidDate(startDate as string) || !isValidDate(endDate as string)) {
+    if (!isValidDate(startDate as string) || !isValidDate(endDate as string))
       return res
         .status(400)
         .json({ message: "Dates must be in YYYY-MM-DD format" });
-    }
 
-    if (new Date(startDate as string) > new Date(endDate as string)) {
+    if (new Date(startDate as string) > new Date(endDate as string))
       return res
         .status(400)
         .json({ message: "startDate cannot be after endDate" });
-    }
 
     const collections = await getMilkCollectionsByDateRangeService(
       startDate as string,
       endDate as string,
     );
 
-    if (!collections || collections.length === 0) {
+    if (!collections || collections.length === 0)
       return res
         .status(404)
         .json({ message: "No collections found in this date range" });
-    }
+
     return res.status(200).json({
       message: "Collections fetched successfully",
       data: collections,
@@ -252,128 +242,113 @@ export const getMilkCollectionsByDateRangeController = async (
   }
 };
 
-// ── Get milk collections by status ─────────────────────────────────────────
-// GET /milk/collections/status?status=Verified
+// ── Get milk collections by status ──────────────────────────────────────────
 export const getMilkCollectionsByStatusController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const { status } = req.query;
-
-    if (!status) {
+    if (!status)
       return res
         .status(400)
         .json({ message: "status query param is required" });
-    }
 
     const validStatuses = ["Recorded", "Verified", "Disputed"];
-    if (!validStatuses.includes(status as string)) {
+    if (!validStatuses.includes(status as string))
       return res.status(400).json({
         message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
       });
-    }
 
     const collections = await getMilkCollectionsByStatusService(
       status as string,
     );
-    if (!collections || collections.length === 0) {
+    if (!collections || collections.length === 0)
       return res
         .status(404)
         .json({ message: `No collections found with status: ${status}` });
-    }
-    return res
-      .status(200)
-      .json({ message: "Collections fetched successfully", data: collections });
+
+    return res.status(200).json({
+      message: "Collections fetched successfully",
+      data: collections,
+    });
   } catch (error: any) {
     console.error("❌ getMilkCollectionsByStatusController:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── Get disputed milk collections ──────────────────────────────────────────
+// ── Get disputed milk collections ────────────────────────────────────────────
 export const getDisputedMilkCollectionsController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const collections = await getDisputedMilkCollectionsService();
-    if (!collections || collections.length === 0) {
+    if (!collections || collections.length === 0)
       return res.status(404).json({ message: "No disputed collections found" });
-    }
-    return res
-      .status(200)
-      .json({
-        message: "Disputed collections fetched successfully",
-        data: collections,
-      });
+
+    return res.status(200).json({
+      message: "Disputed collections fetched successfully",
+      data: collections,
+    });
   } catch (error: any) {
     console.error("❌ getDisputedMilkCollectionsController:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── Get farmer milk summary (for payment calculation) ──────────────────────
-// GET /milk/farmer/:farmerId/summary?startDate=2026-01-01&endDate=2026-01-31
+// ── Get farmer milk summary ──────────────────────────────────────────────────
 export const getFarmerMilkSummaryController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const farmerID = parseId(req.params.farmerId);
-    if (isNaN(farmerID)) {
+    if (isNaN(farmerID))
       return res.status(400).json({ message: "Invalid farmer ID" });
-    }
 
     const { startDate, endDate } = req.query;
+    if (!startDate || !endDate)
+      return res.status(400).json({
+        message: "Both startDate and endDate query params are required",
+      });
 
-    if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({
-          message: "Both startDate and endDate query params are required",
-        });
-    }
-
-    if (!isValidDate(startDate as string) || !isValidDate(endDate as string)) {
+    if (!isValidDate(startDate as string) || !isValidDate(endDate as string))
       return res
         .status(400)
         .json({ message: "Dates must be in YYYY-MM-DD format" });
-    }
 
     const summary = await getFarmerMilkSummaryService(
       farmerID,
       startDate as string,
       endDate as string,
     );
-    return res
-      .status(200)
-      .json({ message: "Farmer summary fetched successfully", data: summary });
+    return res.status(200).json({
+      message: "Farmer summary fetched successfully",
+      data: summary,
+    });
   } catch (error: any) {
     console.error("❌ getFarmerMilkSummaryController:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── Update milk collection ──────────────────────────────────────────────────
+// ── Update milk collection ───────────────────────────────────────────────────
 export const updateMilkCollectionController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const id = parseId(req.params.id);
-    if (isNaN(id)) {
+    if (isNaN(id))
       return res.status(400).json({ message: "Invalid milk collection ID" });
-    }
 
     const existing = await getMilkCollectionByIdService(id);
-    if (!existing) {
+    if (!existing)
       return res.status(404).json({ message: "Milk collection not found" });
-    }
 
     const body = req.body;
-
-    // Recalculate totalAmount if quantity or price changed
     const quantity = parseFloat(
       body.quantityInLiters ?? existing.quantityInLiters,
     );
@@ -388,12 +363,10 @@ export const updateMilkCollectionController = async (
       totalAmount: (quantity * pricePerLiter).toFixed(2),
     };
 
-    // Validate date format if provided
-    if (updateData.collectionDate && !isValidDate(updateData.collectionDate)) {
+    if (updateData.collectionDate && !isValidDate(updateData.collectionDate))
       return res
         .status(400)
         .json({ message: "collectionDate must be in YYYY-MM-DD format" });
-    }
 
     const result = await updateMilkCollectionService(id, updateData);
     return res.status(200).json({ message: result });
@@ -403,33 +376,28 @@ export const updateMilkCollectionController = async (
   }
 };
 
-// ── Update collection status ────────────────────────────────────────────────
+// ── Update collection status ─────────────────────────────────────────────────
 export const updateCollectionStatusController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const id = parseId(req.params.id);
-    if (isNaN(id)) {
+    if (isNaN(id))
       return res.status(400).json({ message: "Invalid milk collection ID" });
-    }
 
     const { status } = req.body;
-    if (!status) {
-      return res.status(400).json({ message: "status is required" });
-    }
+    if (!status) return res.status(400).json({ message: "status is required" });
 
     const validStatuses = ["Recorded", "Verified", "Disputed"];
-    if (!validStatuses.includes(status)) {
+    if (!validStatuses.includes(status))
       return res.status(400).json({
         message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
       });
-    }
 
     const existing = await getMilkCollectionByIdService(id);
-    if (!existing) {
+    if (!existing)
       return res.status(404).json({ message: "Milk collection not found" });
-    }
 
     const result = await updateCollectionStatusService(id, status);
     return res.status(200).json({ message: result });
@@ -439,26 +407,23 @@ export const updateCollectionStatusController = async (
   }
 };
 
-// ── Mark collection as disputed ────────────────────────────────────────────
+// ── Mark collection as disputed ──────────────────────────────────────────────
 export const markCollectionAsDisputedController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const id = parseId(req.params.id);
-    if (isNaN(id)) {
+    if (isNaN(id))
       return res.status(400).json({ message: "Invalid milk collection ID" });
-    }
 
     const { disputeReason } = req.body;
-    if (!disputeReason || disputeReason.trim() === "") {
+    if (!disputeReason || disputeReason.trim() === "")
       return res.status(400).json({ message: "disputeReason is required" });
-    }
 
     const existing = await getMilkCollectionByIdService(id);
-    if (!existing) {
+    if (!existing)
       return res.status(404).json({ message: "Milk collection not found" });
-    }
 
     const result = await markCollectionAsDisputedService(
       id,
@@ -471,31 +436,26 @@ export const markCollectionAsDisputedController = async (
   }
 };
 
-// ── Resolve dispute ────────────────────────────────────────────────────────
+// ── Resolve dispute ──────────────────────────────────────────────────────────
 export const resolveDisputeController = async (req: Request, res: Response) => {
   try {
     const id = parseId(req.params.id);
-    if (isNaN(id)) {
+    if (isNaN(id))
       return res.status(400).json({ message: "Invalid milk collection ID" });
-    }
 
     const { resolution, newStatus } = req.body;
-
-    if (!resolution || resolution.trim() === "") {
+    if (!resolution || resolution.trim() === "")
       return res.status(400).json({ message: "resolution is required" });
-    }
 
     const validStatuses = ["Recorded", "Verified"];
-    if (!newStatus || !validStatuses.includes(newStatus)) {
+    if (!newStatus || !validStatuses.includes(newStatus))
       return res.status(400).json({
         message: `newStatus is required and must be one of: ${validStatuses.join(", ")}`,
       });
-    }
 
     const existing = await getMilkCollectionByIdService(id);
-    if (!existing) {
+    if (!existing)
       return res.status(404).json({ message: "Milk collection not found" });
-    }
 
     const result = await resolveDisputeService(
       id,
@@ -509,21 +469,19 @@ export const resolveDisputeController = async (req: Request, res: Response) => {
   }
 };
 
-// ── Delete milk collection ─────────────────────────────────────────────────
+// ── Delete milk collection ───────────────────────────────────────────────────
 export const deleteMilkCollectionController = async (
   req: Request,
   res: Response,
 ) => {
   try {
     const id = parseId(req.params.id);
-    if (isNaN(id)) {
+    if (isNaN(id))
       return res.status(400).json({ message: "Invalid milk collection ID" });
-    }
 
     const existing = await getMilkCollectionByIdService(id);
-    if (!existing) {
+    if (!existing)
       return res.status(404).json({ message: "Milk collection not found" });
-    }
 
     const result = await deleteMilkCollectionService(id);
     return res.status(200).json({ message: result });

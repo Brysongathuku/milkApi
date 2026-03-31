@@ -39,6 +39,7 @@ CREATE TABLE "customers" (
 	"is_verified" boolean DEFAULT false,
 	"verification_code" varchar(10),
 	"is_active" boolean DEFAULT true,
+	"unread_notifications" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "customers_email_unique" UNIQUE("email")

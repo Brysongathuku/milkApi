@@ -1,5 +1,5 @@
 {
-  "id": "54713823-f0cf-427f-86bf-d5dd7d859331",
+  "id": "f6d57aea-bd6c-4d5b-b591-a83d986b9fa1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -230,6 +230,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": true
+        },
+        "unread_notifications": {
+          "name": "unread_notifications",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",

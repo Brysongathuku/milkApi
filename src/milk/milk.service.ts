@@ -2,7 +2,9 @@ import { sql } from "drizzle-orm";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import db from "../Drizzle/db";
 import { TIMilk, MilkTable, CustomersTable } from "../Drizzle/schema";
-import { fetchAndSaveWeatherService } from "../weather/weather.service"; // ← NEW
+import { fetchAndSaveWeatherService } from "../weather/weather.service";
+import { sendSMSService } from "../africastalking/africastalking.service";
+import { incrementUnreadNotificationsService } from "../notifications/notification.service";
 
 // ── Create milk collection ──────────────────────────────────────────────────
 export const createMilkCollectionService = async (milk: TIMilk) => {
@@ -15,9 +17,8 @@ export const createMilkCollectionService = async (milk: TIMilk) => {
 
     const savedMilk = result[0];
 
-    // ── Auto-fetch & save weather for this farmer + date ──────────────────
+    // ── Auto-fetch & save weather ─────────────────────────────────────────
     try {
-      // Get farmer's farm location
       const [farmer] = await db
         .select({ farmLocation: CustomersTable.farmLocation })
         .from(CustomersTable)
@@ -27,7 +28,7 @@ export const createMilkCollectionService = async (milk: TIMilk) => {
         await fetchAndSaveWeatherService(
           milk.farmerID,
           farmer.farmLocation,
-          milk.collectionDate, // YYYY-MM-DD string
+          milk.collectionDate,
         );
         console.log(
           `🌤️  Weather auto-saved for farmer ${milk.farmerID} on ${milk.collectionDate}`,
@@ -38,14 +39,60 @@ export const createMilkCollectionService = async (milk: TIMilk) => {
         );
       }
     } catch (weatherError: any) {
-      // Weather failure must NOT block milk saving
       console.error(
         "⚠️  Weather auto-fetch failed (milk still saved):",
         weatherError.message,
       );
     }
 
-    return savedMilk;
+    // ── Send SMS + increment unread notification count ────────────────────
+    let smsDelivered = false; // ── tracks real SMS delivery ──
+
+    try {
+      const [farmerFull] = await db
+        .select({
+          firstName: CustomersTable.firstName,
+          lastName: CustomersTable.lastName,
+          contactPhone: CustomersTable.contactPhone,
+        })
+        .from(CustomersTable)
+        .where(eq(CustomersTable.customerID, milk.farmerID));
+
+      if (farmerFull) {
+        const liters = parseFloat(savedMilk.quantityInLiters).toFixed(2);
+        const amount = parseFloat(savedMilk.totalAmount).toFixed(2);
+        const grade = savedMilk.qualityGrade ?? "Grade A";
+        const date = savedMilk.collectionDate;
+
+        const smsMessage =
+          `Hello ${farmerFull.firstName}, your milk collection has been recorded.\n` +
+          `Date: ${date}\n` +
+          `Quantity: ${liters}L\n` +
+          `Quality: ${grade}\n` +
+          `Amount: KSh ${amount}\n` +
+          `Thank you - Smart Dairy`;
+
+        if (farmerFull.contactPhone) {
+          await sendSMSService(farmerFull.contactPhone, smsMessage);
+          smsDelivered = true; // ✅ SMS sent successfully
+        } else {
+          console.warn(
+            `⚠️  No phone number for farmer ${milk.farmerID} — SMS skipped`,
+          );
+        }
+
+        await incrementUnreadNotificationsService(milk.farmerID);
+      }
+    } catch (notifyError: any) {
+      console.error(
+        "⚠️  Notification failed (milk still saved):",
+        notifyError.message,
+      );
+      smsDelivered = false;
+    }
+
+    // ── Return milk data + smsDelivered flag to controller ────────────────
+    return { ...savedMilk, smsDelivered };
   } catch (error: any) {
     console.error("❌ createMilkCollectionService FULL error:", {
       message: error.message,

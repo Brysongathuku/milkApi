@@ -8,6 +8,7 @@ import supportRoutes from "./support/support.router";
 import feedingRouter from "./feeding/feeding.router"; // ← added
 import weatherRouter from "./weather/weather.router";
 import geminiRouter from "./gemini/gemini.router";
+import notificationRouter from "./notifications/notification.router";
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use("/feeding", feedingRouter); // ← added
 app.use("/weather", weatherRouter);
 
 app.use("/gemini", geminiRouter);
+app.use("/notifications", notificationRouter);
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req: Request, res: Response) => {
   res.status(404).json({

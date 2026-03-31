@@ -99,6 +99,7 @@ export const CustomersTable = pgTable("customers", {
   isVerified: boolean("is_verified").default(false),
   verificationCode: varchar("verification_code", { length: 10 }),
   isActive: boolean("is_active").default(true),
+  unreadNotifications: integer("unread_notifications").default(0).notNull(),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow(),
 });
