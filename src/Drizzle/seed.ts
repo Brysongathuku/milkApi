@@ -9,822 +9,858 @@ import {
   WeatherRecordsTable,
 } from "./schema";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const rand = (min: number, max: number, dp = 2) =>
+  parseFloat((Math.random() * (max - min) + min).toFixed(dp));
+
+const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+const dateStr = (day: number) => `2026-04-${String(day).padStart(2, "0")}`;
+
+// ─── Farmer profiles — all locations within Kiambu County ────────────────────
+
+const FARMER_PROFILES = [
+  {
+    firstName: "John",
+    lastName: "Kamau",
+    email: "farmer1@gmail.com",
+    phone: "0711111111",
+    address: "Limuru, Kiambu County",
+    farmLocation: "Limuru, Kiambu County",
+    farmSize: "5 acres",
+    numberOfCows: 8,
+    cowBreed: "Friesian",
+    avatarSeed: "JK",
+    avatarBg: "0284c7",
+    liters: [26, 31] as [number, number],
+    grade: "Grade A" as const,
+    fat: [4.0, 4.5] as [number, number],
+    time: "06:30",
+    price: 50,
+  },
+  {
+    firstName: "Mary",
+    lastName: "Wanjiku",
+    email: "farmer2@gmail.com",
+    phone: "0722222222",
+    address: "Githunguri, Kiambu County",
+    farmLocation: "Githunguri, Kiambu County",
+    farmSize: "3 acres",
+    numberOfCows: 5,
+    cowBreed: "Ayrshire",
+    avatarSeed: "MW",
+    avatarBg: "db2777",
+    liters: [16, 21] as [number, number],
+    grade: "Grade B" as const,
+    fat: [3.2, 3.8] as [number, number],
+    time: "07:00",
+    price: 48,
+  },
+  {
+    firstName: "Peter",
+    lastName: "Mwangi",
+    email: "farmer3@gmail.com",
+    phone: "0733333333",
+    address: "Kikuyu, Kiambu County",
+    farmLocation: "Kikuyu, Kiambu County",
+    farmSize: "8 acres",
+    numberOfCows: 12,
+    cowBreed: "Holstein",
+    avatarSeed: "PM",
+    avatarBg: "7c3aed",
+    liters: [32, 38] as [number, number],
+    grade: "Grade A" as const,
+    fat: [4.3, 4.7] as [number, number],
+    time: "06:45",
+    price: 50,
+  },
+  {
+    firstName: "Grace",
+    lastName: "Njeri",
+    email: "farmer4@gmail.com",
+    phone: "0744444444",
+    address: "Ruiru, Kiambu County",
+    farmLocation: "Ruiru, Kiambu County",
+    farmSize: "4 acres",
+    numberOfCows: 6,
+    cowBreed: "Crossbreed",
+    avatarSeed: "GN",
+    avatarBg: "ea580c",
+    liters: [20, 25] as [number, number],
+    grade: "Grade A" as const,
+    fat: [3.6, 4.1] as [number, number],
+    time: "07:15",
+    price: 50,
+  },
+  {
+    firstName: "Samuel",
+    lastName: "Ochieng",
+    email: "farmer5@gmail.com",
+    phone: "0755555555",
+    address: "Thika, Kiambu County",
+    farmLocation: "Thika, Kiambu County",
+    farmSize: "6 acres",
+    numberOfCows: 10,
+    cowBreed: "Sahiwal",
+    avatarSeed: "SO",
+    avatarBg: "0891b2",
+    liters: [28, 33] as [number, number],
+    grade: "Grade A" as const,
+    fat: [4.0, 4.4] as [number, number],
+    time: "06:30",
+    price: 50,
+  },
+  {
+    firstName: "Faith",
+    lastName: "Auma",
+    email: "farmer6@gmail.com",
+    phone: "0766666666",
+    address: "Lari, Kiambu County",
+    farmLocation: "Lari, Kiambu County",
+    farmSize: "4 acres",
+    numberOfCows: 7,
+    cowBreed: "Jersey",
+    avatarSeed: "FA",
+    avatarBg: "16a34a",
+    liters: [22, 27] as [number, number],
+    grade: "Grade A" as const,
+    fat: [3.8, 4.3] as [number, number],
+    time: "07:00",
+    price: 50,
+  },
+  {
+    firstName: "David",
+    lastName: "Kipchoge",
+    email: "farmer7@gmail.com",
+    phone: "0777777777",
+    address: "Gatundu, Kiambu County",
+    farmLocation: "Gatundu, Kiambu County",
+    farmSize: "10 acres",
+    numberOfCows: 15,
+    cowBreed: "Friesian",
+    avatarSeed: "DK",
+    avatarBg: "b45309",
+    liters: [40, 48] as [number, number],
+    grade: "Grade A" as const,
+    fat: [4.2, 4.8] as [number, number],
+    time: "06:15",
+    price: 50,
+  },
+  {
+    firstName: "Agnes",
+    lastName: "Mutua",
+    email: "farmer8@gmail.com",
+    phone: "0788888888",
+    address: "Kabete, Kiambu County",
+    farmLocation: "Kabete, Kiambu County",
+    farmSize: "3 acres",
+    numberOfCows: 4,
+    cowBreed: "Guernsey",
+    avatarSeed: "AM",
+    avatarBg: "be185d",
+    liters: [12, 16] as [number, number],
+    grade: "Grade B" as const,
+    fat: [3.2, 3.7] as [number, number],
+    time: "07:30",
+    price: 48,
+  },
+  {
+    firstName: "James",
+    lastName: "Kariuki",
+    email: "farmer9@gmail.com",
+    phone: "0799999999",
+    address: "Kiambaa, Kiambu County",
+    farmLocation: "Kiambaa, Kiambu County",
+    farmSize: "7 acres",
+    numberOfCows: 11,
+    cowBreed: "Brown Swiss",
+    avatarSeed: "JKa",
+    avatarBg: "0f766e",
+    liters: [30, 36] as [number, number],
+    grade: "Grade A" as const,
+    fat: [4.1, 4.6] as [number, number],
+    time: "06:45",
+    price: 50,
+  },
+  {
+    firstName: "Esther",
+    lastName: "Chebet",
+    email: "farmer10@gmail.com",
+    phone: "0710101010",
+    address: "Karuri, Kiambu County",
+    farmLocation: "Karuri, Kiambu County",
+    farmSize: "5 acres",
+    numberOfCows: 9,
+    cowBreed: "Ayrshire",
+    avatarSeed: "EC",
+    avatarBg: "6d28d9",
+    liters: [24, 30] as [number, number],
+    grade: "Grade A" as const,
+    fat: [3.9, 4.5] as [number, number],
+    time: "07:00",
+    price: 50,
+  },
+];
+
+const avatarUrl = (seed: string, bg: string) =>
+  `https://api.dicebear.com/7.x/initials/png?seed=${seed}&backgroundColor=${bg}&textColor=ffffff`;
+
+// ─── Weather — Kiambu County has one climate profile (cool highland) ──────────
+// Sub-locations vary slightly but all share the same highland belt climate.
+
+const KIAMBU_WEATHER = {
+  conditions: ["Sunny", "Partly Cloudy", "Cloudy", "Rainy", "Misty", "Clear"],
+  tempRange: [14, 22] as [number, number],
+  rainRange: [0, 18] as [number, number],
+};
+
+// ─── Feed plan types ──────────────────────────────────────────────────────────
+
+type FeedType =
+  | "Napier Grass"
+  | "Maize Silage"
+  | "Dairy Meal"
+  | "Rhodes Grass"
+  | "Lucerne"
+  | "Wheat Bran"
+  | "Cotton Seed Cake"
+  | "Soya Bean Meal"
+  | "Hay"
+  | "Brewers Grain"
+  | "Molasses"
+  | "Mineral Supplement"
+  | "Other";
+
+type FeedTime = "Morning" | "Afternoon" | "Evening" | "Night";
+
+interface FeedPlan {
+  feedType: FeedType;
+  amountKg: string;
+  feedingTime: FeedTime;
+  costPerKg: string;
+  supplementName: string | null;
+  notes: string | null;
+}
+
+const GRADE_A_FEEDS: FeedPlan[] = [
+  {
+    feedType: "Napier Grass",
+    amountKg: "25.00",
+    feedingTime: "Morning",
+    costPerKg: "5.00",
+    supplementName: null,
+    notes: "Fresh cut grass",
+  },
+  {
+    feedType: "Dairy Meal",
+    amountKg: "4.50",
+    feedingTime: "Morning",
+    costPerKg: "65.00",
+    supplementName: null,
+    notes: null,
+  },
+  {
+    feedType: "Lucerne",
+    amountKg: "8.00",
+    feedingTime: "Evening",
+    costPerKg: "20.00",
+    supplementName: null,
+    notes: "High protein evening supplement",
+  },
+  {
+    feedType: "Wheat Bran",
+    amountKg: "3.00",
+    feedingTime: "Afternoon",
+    costPerKg: "30.00",
+    supplementName: null,
+    notes: null,
+  },
+];
+
+const GRADE_B_FEEDS: FeedPlan[] = [
+  {
+    feedType: "Napier Grass",
+    amountKg: "20.00",
+    feedingTime: "Morning",
+    costPerKg: "5.00",
+    supplementName: null,
+    notes: "Fresh cut grass",
+  },
+  {
+    feedType: "Dairy Meal",
+    amountKg: "3.00",
+    feedingTime: "Morning",
+    costPerKg: "65.00",
+    supplementName: null,
+    notes: null,
+  },
+  {
+    feedType: "Rhodes Grass",
+    amountKg: "10.00",
+    feedingTime: "Evening",
+    costPerKg: "8.00",
+    supplementName: null,
+    notes: null,
+  },
+];
+
+const WEEKLY_MINERAL: FeedPlan = {
+  feedType: "Mineral Supplement",
+  amountKg: "0.50",
+  feedingTime: "Morning",
+  costPerKg: "120.00",
+  supplementName: "Unga Dairy Mineral",
+  notes: "Weekly mineral dose",
+};
+
+const BIWEEKLY_MOLASSES: FeedPlan = {
+  feedType: "Molasses",
+  amountKg: "1.00",
+  feedingTime: "Afternoon",
+  costPerKg: "45.00",
+  supplementName: null,
+  notes: "Energy booster — bi-weekly",
+};
+
+// ─── Misc pools ───────────────────────────────────────────────────────────────
+
+const POSITIVE_NOTES = [
+  "Excellent quality morning collection",
+  "Very consistent fat content today",
+  "Highest volume this week",
+  "Cows well hydrated and calm",
+  "Good temperature at delivery",
+  "Clean collection, no issues",
+  null,
+  null,
+  null,
+  null,
+];
+
+const DISPUTED_REASONS = [
+  "Temperature above 6°C at delivery",
+  "Abnormal smell detected on arrival",
+  "Somatic cell count elevated above threshold",
+  "Possible contamination during transport",
+];
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  MAIN SEED
+// ═════════════════════════════════════════════════════════════════════════════
+
 async function seed() {
-  console.log("🌱 Seeding database...");
+  console.log(
+    "\n🌱  Starting full database seed — April 2026 (Kiambu County)\n",
+  );
 
-  // ── 1. Hash password ──────────────────────────────────────────────────────
-  const hashedPassword = await bcrypt.hash("bryson", 10);
+  const hashedPassword = await bcrypt.hash("bryson20", 10);
+  const CHUNK = 50;
 
-  // ── 2. Insert Admin ───────────────────────────────────────────────────────
-  console.log("👤 Creating admin...");
+  // ══════════════════════════════════════════════════════════════════════════
+  //  1. ADMIN
+  // ══════════════════════════════════════════════════════════════════════════
+
+  console.log("👤  Inserting admin...");
   const [admin] = await db
     .insert(CustomersTable)
     .values({
       firstName: "Bryson",
-      lastName: "Admin",
-      email: "admin@gmail.com",
+      lastName: "Gathuku",
+      email: "brysongathuku189@gmail.com",
       password: hashedPassword,
       contactPhone: "0700000001",
       address: "Nairobi, Kenya",
+      farmLocation: null,
+      farmSize: null,
+      numberOfCows: null,
+      cowBreed: null,
       role: "admin",
       isVerified: true,
       isActive: true,
+      unreadNotifications: 0,
+      imageUrl: avatarUrl("BG", "16a34a"),
     })
     .returning();
 
-  // ── 3. Insert Farmers ─────────────────────────────────────────────────────
-  console.log("🧑‍🌾 Creating farmers...");
-  const farmersData = [
-    {
-      firstName: "John",
-      lastName: "Kamau",
-      email: "farmer1@gmail.com",
-      password: hashedPassword,
-      contactPhone: "0711111111",
-      address: "Kiambu, Kenya",
-      farmLocation: "Kiambu County",
-      farmSize: "5 acres",
-      numberOfCows: 8,
-      cowBreed: "Friesian",
-      role: "user" as const,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      firstName: "Mary",
-      lastName: "Wanjiku",
-      email: "farmer2@gmail.com",
-      password: hashedPassword,
-      contactPhone: "0722222222",
-      address: "Nakuru, Kenya",
-      farmLocation: "Nakuru County",
-      farmSize: "3 acres",
-      numberOfCows: 5,
-      cowBreed: "Ayrshire",
-      role: "user" as const,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      firstName: "Peter",
-      lastName: "Mwangi",
-      email: "farmer3@gmail.com",
-      password: hashedPassword,
-      contactPhone: "0733333333",
-      address: "Meru, Kenya",
-      farmLocation: "Meru County",
-      farmSize: "8 acres",
-      numberOfCows: 12,
-      cowBreed: "Holstein",
-      role: "user" as const,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      firstName: "Grace",
-      lastName: "Njeri",
-      email: "farmer4@gmail.com",
-      password: hashedPassword,
-      contactPhone: "0744444444",
-      address: "Nyeri, Kenya",
-      farmLocation: "Nyeri County",
-      farmSize: "4 acres",
-      numberOfCows: 6,
-      cowBreed: "Crossbreed",
-      role: "user" as const,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      firstName: "Samuel",
-      lastName: "Ochieng",
-      email: "farmer5@gmail.com",
-      password: hashedPassword,
-      contactPhone: "0755555555",
-      address: "Kisumu, Kenya",
-      farmLocation: "Kisumu County",
-      farmSize: "6 acres",
-      numberOfCows: 10,
-      cowBreed: "Sahiwal",
-      role: "user" as const,
-      isVerified: true,
-      isActive: true,
-    },
-  ];
+  // ══════════════════════════════════════════════════════════════════════════
+  //  2. FARMERS
+  // ══════════════════════════════════════════════════════════════════════════
 
-  const farmers = await db
+  console.log("🧑‍🌾  Inserting 10 farmers (all Kiambu County)...");
+  const farmerRows = await db
     .insert(CustomersTable)
-    .values(farmersData)
+    .values(
+      FARMER_PROFILES.map((p) => ({
+        firstName: p.firstName,
+        lastName: p.lastName,
+        email: p.email,
+        password: hashedPassword,
+        contactPhone: p.phone,
+        address: p.address,
+        farmLocation: p.farmLocation,
+        farmSize: p.farmSize,
+        numberOfCows: p.numberOfCows,
+        cowBreed: p.cowBreed,
+        role: "user" as const,
+        isVerified: true,
+        isActive: true,
+        unreadNotifications: 0,
+        imageUrl: avatarUrl(p.avatarSeed, p.avatarBg),
+      })),
+    )
     .returning();
 
-  const [f1, f2, f3, f4, f5] = farmers;
+  // ══════════════════════════════════════════════════════════════════════════
+  //  3. MILK COLLECTIONS — 1 per farmer per day, April 1–30
+  // ══════════════════════════════════════════════════════════════════════════
 
-  // ── 4. Insert Milk Collections (4+ per farmer) ────────────────────────────
-  console.log("🥛 Creating milk collections...");
-  const milkData = [
-    // FARMER 1 - John Kamau (5 collections)
-    {
-      farmerID: f1.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "28.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1425.00",
-      collectionDate: "2026-03-18",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.20",
-      temperature: "4.50",
-      notes: "Good quality morning collection",
-    },
-    {
-      farmerID: f1.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "26.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1300.00",
-      collectionDate: "2026-03-19",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.00",
-      temperature: "4.40",
-      notes: null,
-    },
-    {
-      farmerID: f1.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "29.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1450.00",
-      collectionDate: "2026-03-20",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.30",
-      temperature: "4.20",
-      notes: "Excellent quality",
-    },
-    {
-      farmerID: f1.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "27.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1375.00",
-      collectionDate: "2026-03-21",
-      collectionTime: "06:30",
-      collectionStatus: "Recorded" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.10",
-      temperature: "4.60",
-      notes: null,
-    },
-    {
-      farmerID: f1.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "30.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1500.00",
-      collectionDate: "2026-03-22",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.40",
-      temperature: "4.30",
-      notes: "Best collection this week",
-    },
+  console.log("🥛  Inserting 300 milk collections (10 farmers × 30 days)...");
 
-    // FARMER 2 - Mary Wanjiku (5 collections)
-    {
-      farmerID: f2.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "18.00",
-      pricePerLiter: "50.00",
-      totalAmount: "900.00",
-      collectionDate: "2026-03-18",
-      collectionTime: "07:00",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "3.80",
-      temperature: "4.20",
-      notes: null,
-    },
-    {
-      farmerID: f2.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "16.50",
-      pricePerLiter: "50.00",
-      totalAmount: "825.00",
-      collectionDate: "2026-03-19",
-      collectionTime: "07:00",
-      collectionStatus: "Disputed" as const,
-      qualityGrade: "Grade C" as const,
-      fatContent: "2.80",
-      temperature: "6.50",
-      isDisputed: true,
-      disputeReason: "Temperature too high at delivery",
-    },
-    {
-      farmerID: f2.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "19.00",
-      pricePerLiter: "50.00",
-      totalAmount: "950.00",
-      collectionDate: "2026-03-20",
-      collectionTime: "07:00",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade B" as const,
-      fatContent: "3.50",
-      temperature: "5.00",
-      notes: "Improved from yesterday",
-    },
-    {
-      farmerID: f2.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "17.50",
-      pricePerLiter: "50.00",
-      totalAmount: "875.00",
-      collectionDate: "2026-03-21",
-      collectionTime: "07:00",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "3.90",
-      temperature: "4.40",
-      notes: null,
-    },
-    {
-      farmerID: f2.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "20.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1000.00",
-      collectionDate: "2026-03-22",
-      collectionTime: "07:00",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.00",
-      temperature: "4.30",
-      notes: "Much better quality this week",
-    },
+  const milkInserts: any[] = [];
 
-    // FARMER 3 - Peter Mwangi (6 collections)
-    {
-      farmerID: f3.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "35.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1750.00",
-      collectionDate: "2026-03-17",
-      collectionTime: "06:45",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.50",
-      temperature: "4.00",
-      notes: "Excellent fat content",
-    },
-    {
-      farmerID: f3.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "32.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1600.00",
-      collectionDate: "2026-03-18",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.30",
-      temperature: "4.10",
-      notes: null,
-    },
-    {
-      farmerID: f3.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "36.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1825.00",
-      collectionDate: "2026-03-19",
-      collectionTime: "06:45",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.60",
-      temperature: "3.90",
-      notes: "Highest volume this month",
-    },
-    {
-      farmerID: f3.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "33.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1650.00",
-      collectionDate: "2026-03-20",
-      collectionTime: "06:45",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.40",
-      temperature: "4.20",
-      notes: null,
-    },
-    {
-      farmerID: f3.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "34.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1725.00",
-      collectionDate: "2026-03-21",
-      collectionTime: "06:45",
-      collectionStatus: "Recorded" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.50",
-      temperature: "4.00",
-      notes: null,
-    },
-    {
-      farmerID: f3.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "35.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1775.00",
-      collectionDate: "2026-03-22",
-      collectionTime: "06:45",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.55",
-      temperature: "4.10",
-      notes: "Consistently excellent quality",
-    },
+  for (let day = 1; day <= 30; day++) {
+    const date = dateStr(day);
 
-    // FARMER 4 - Grace Njeri (4 collections)
-    {
-      farmerID: f4.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "22.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1100.00",
-      collectionDate: "2026-03-19",
-      collectionTime: "07:15",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade B" as const,
-      fatContent: "3.20",
-      temperature: "5.10",
-      notes: "Slightly warm on delivery",
-    },
-    {
-      farmerID: f4.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "21.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1050.00",
-      collectionDate: "2026-03-20",
-      collectionTime: "07:15",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "3.60",
-      temperature: "4.50",
-      notes: "Better temperature control",
-    },
-    {
-      farmerID: f4.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "23.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1175.00",
-      collectionDate: "2026-03-21",
-      collectionTime: "07:15",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "3.80",
-      temperature: "4.40",
-      notes: null,
-    },
-    {
-      farmerID: f4.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "24.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1200.00",
-      collectionDate: "2026-03-22",
-      collectionTime: "07:15",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "3.90",
-      temperature: "4.30",
-      notes: "Good improvement this week",
-    },
+    for (let fi = 0; fi < farmerRows.length; fi++) {
+      const profile = FARMER_PROFILES[fi];
+      const farmer = farmerRows[fi];
 
-    // FARMER 5 - Samuel Ochieng (5 collections)
-    {
-      farmerID: f5.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "30.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1525.00",
-      collectionDate: "2026-03-18",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.10",
-      temperature: "4.30",
-      notes: null,
-    },
-    {
-      farmerID: f5.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "29.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1450.00",
-      collectionDate: "2026-03-19",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.00",
-      temperature: "4.40",
-      notes: null,
-    },
-    {
-      farmerID: f5.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "31.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1575.00",
-      collectionDate: "2026-03-20",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.20",
-      temperature: "4.20",
-      notes: "Very consistent quality",
-    },
-    {
-      farmerID: f5.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "28.50",
-      pricePerLiter: "50.00",
-      totalAmount: "1425.00",
-      collectionDate: "2026-03-21",
-      collectionTime: "06:30",
-      collectionStatus: "Recorded" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.15",
-      temperature: "4.35",
-      notes: null,
-    },
-    {
-      farmerID: f5.customerID,
-      collectorID: admin.customerID,
-      quantityInLiters: "32.00",
-      pricePerLiter: "50.00",
-      totalAmount: "1600.00",
-      collectionDate: "2026-03-22",
-      collectionTime: "06:30",
-      collectionStatus: "Verified" as const,
-      qualityGrade: "Grade A" as const,
-      fatContent: "4.25",
-      temperature: "4.25",
-      notes: "Strong finish to the week",
-    },
-  ];
+      const qty = rand(profile.liters[0], profile.liters[1]);
+      const fat = rand(profile.fat[0], profile.fat[1]);
+      const temp = rand(3.6, 5.8);
+      const total = parseFloat((qty * profile.price).toFixed(2));
 
-  const milkRecords = await db.insert(MilkTable).values(milkData).returning();
+      let status: "Verified" | "Recorded" | "Disputed" =
+        day >= 25 ? "Recorded" : "Verified";
+      let isDisputed = false;
+      let disputeReason: string | null = null;
+      let qualityGrade: "Grade A" | "Grade B" | "Grade C" | "Rejected" =
+        profile.grade;
 
-  // ── 5. Insert Feeding Habits ──────────────────────────────────────────────
-  console.log("🌿 Creating feeding habits...");
-  const feedingData = [];
+      if (profile.grade === "Grade B" && day <= 20 && Math.random() < 0.1) {
+        status = "Disputed";
+        isDisputed = true;
+        disputeReason = pick(DISPUTED_REASONS);
+        qualityGrade = "Grade C";
+      }
 
-  // Create feeding records for each milk collection
+      milkInserts.push({
+        farmerID: farmer.customerID,
+        collectorID: admin.customerID,
+        quantityInLiters: qty.toFixed(2),
+        pricePerLiter: profile.price.toFixed(2),
+        totalAmount: total.toFixed(2),
+        collectionDate: date,
+        collectionTime: profile.time,
+        collectionStatus: status,
+        qualityGrade,
+        fatContent: fat.toFixed(2),
+        temperature: temp.toFixed(2),
+        notes: pick(POSITIVE_NOTES),
+        isDisputed,
+        disputeReason,
+      });
+    }
+  }
+
+  let milkRecords: any[] = [];
+  for (let i = 0; i < milkInserts.length; i += CHUNK) {
+    const chunk = await db
+      .insert(MilkTable)
+      .values(milkInserts.slice(i, i + CHUNK))
+      .returning();
+    milkRecords = milkRecords.concat(chunk);
+  }
+  console.log(`   ✅  ${milkRecords.length} milk records inserted`);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  4. FEEDING HABITS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  console.log("🌿  Inserting feeding habits...");
+
+  const feedInserts: any[] = [];
+  const farmerCollectionCount: Record<number, number> = {};
+
   for (const milk of milkRecords) {
-    // Morning feeds (every collection has morning feed)
-    feedingData.push({
-      farmerID: milk.farmerID,
-      milkID: milk.milkID,
-      feedType: "Napier Grass" as const,
-      amountKg: "25.00",
-      feedingTime: "Morning" as const,
-      feedingDate: milk.collectionDate,
-      costPerKg: "5.00",
-      notes: "Fresh cut grass",
-      recordedBy: admin.customerID,
-    });
+    const farmerIdx = farmerRows.findIndex(
+      (f) => f.customerID === milk.farmerID,
+    );
+    farmerCollectionCount[farmerIdx] =
+      (farmerCollectionCount[farmerIdx] ?? 0) + 1;
+    const collCount = farmerCollectionCount[farmerIdx];
 
-    feedingData.push({
-      farmerID: milk.farmerID,
-      milkID: milk.milkID,
-      feedType: "Dairy Meal" as const,
-      amountKg: "4.00",
-      feedingTime: "Morning" as const,
-      feedingDate: milk.collectionDate,
-      costPerKg: "65.00",
-      notes: null,
-      recordedBy: admin.customerID,
-    });
+    const profile = FARMER_PROFILES[farmerIdx];
+    const feeds = profile.grade === "Grade A" ? GRADE_A_FEEDS : GRADE_B_FEEDS;
 
-    // Add evening feed for Grade A milk (higher quality farmers feed better)
-    if (milk.qualityGrade === "Grade A") {
-      feedingData.push({
+    for (const feed of feeds) {
+      feedInserts.push({
         farmerID: milk.farmerID,
         milkID: milk.milkID,
-        feedType: "Lucerne" as const,
-        amountKg: "8.00",
-        feedingTime: "Evening" as const,
+        feedType: feed.feedType,
+        amountKg: feed.amountKg,
+        feedingTime: feed.feedingTime,
         feedingDate: milk.collectionDate,
-        costPerKg: "20.00",
-        notes: "Protein supplement",
+        costPerKg: feed.costPerKg,
+        supplementName: feed.supplementName,
+        notes: feed.notes,
         recordedBy: admin.customerID,
       });
     }
 
-    // Add mineral supplement weekly (every 7th collection)
-    const recordIndex = milkRecords.indexOf(milk);
-    if (recordIndex % 7 === 0) {
-      feedingData.push({
+    if (collCount % 7 === 0) {
+      feedInserts.push({
         farmerID: milk.farmerID,
         milkID: milk.milkID,
-        feedType: "Mineral Supplement" as const,
-        amountKg: "0.50",
-        feedingTime: "Morning" as const,
+        feedType: WEEKLY_MINERAL.feedType,
+        amountKg: WEEKLY_MINERAL.amountKg,
+        feedingTime: WEEKLY_MINERAL.feedingTime,
         feedingDate: milk.collectionDate,
-        costPerKg: "120.00",
-        notes: "Weekly mineral dose",
+        costPerKg: WEEKLY_MINERAL.costPerKg,
+        supplementName: WEEKLY_MINERAL.supplementName,
+        notes: WEEKLY_MINERAL.notes,
+        recordedBy: admin.customerID,
+      });
+    }
+
+    if (collCount % 14 === 0) {
+      feedInserts.push({
+        farmerID: milk.farmerID,
+        milkID: milk.milkID,
+        feedType: BIWEEKLY_MOLASSES.feedType,
+        amountKg: BIWEEKLY_MOLASSES.amountKg,
+        feedingTime: BIWEEKLY_MOLASSES.feedingTime,
+        feedingDate: milk.collectionDate,
+        costPerKg: BIWEEKLY_MOLASSES.costPerKg,
+        supplementName: BIWEEKLY_MOLASSES.supplementName,
+        notes: BIWEEKLY_MOLASSES.notes,
         recordedBy: admin.customerID,
       });
     }
   }
 
-  await db.insert(FeedingHabitsTable).values(feedingData);
+  for (let i = 0; i < feedInserts.length; i += CHUNK) {
+    await db.insert(FeedingHabitsTable).values(feedInserts.slice(i, i + CHUNK));
+  }
+  console.log(`   ✅  ${feedInserts.length} feeding records inserted`);
 
-  // ── 6. Insert Weather Records ─────────────────────────────────────────────
-  console.log("🌤️  Creating weather records...");
-  const weatherData = [
-    // Farmer 1 - Kiambu
-    {
-      farmerID: f1.customerID,
-      recordDate: "2026-03-18",
-      temperatureCelsius: "18.50",
-      rainfallMm: "0.00",
-      humidity: "72.00",
-      weatherCondition: "Sunny",
-      windSpeedKph: "12.00",
-      location: "Kiambu County",
-      dataSource: "manual",
-    },
-    {
-      farmerID: f1.customerID,
-      recordDate: "2026-03-22",
-      temperatureCelsius: "19.20",
-      rainfallMm: "2.50",
-      humidity: "78.00",
-      weatherCondition: "Partly Cloudy",
-      windSpeedKph: "10.00",
-      location: "Kiambu County",
-      dataSource: "manual",
-    },
+  // ══════════════════════════════════════════════════════════════════════════
+  //  5. WEATHER RECORDS — Kiambu County highland climate, all 30 days
+  // ══════════════════════════════════════════════════════════════════════════
 
-    // Farmer 2 - Nakuru
-    {
-      farmerID: f2.customerID,
-      recordDate: "2026-03-18",
-      temperatureCelsius: "22.00",
-      rainfallMm: "0.00",
-      humidity: "65.00",
-      weatherCondition: "Sunny",
-      windSpeedKph: "15.00",
-      location: "Nakuru County",
-      dataSource: "manual",
-    },
-    {
-      farmerID: f2.customerID,
-      recordDate: "2026-03-19",
-      temperatureCelsius: "28.50",
-      rainfallMm: "0.00",
-      humidity: "55.00",
-      weatherCondition: "Hot & Dry",
-      windSpeedKph: "8.00",
-      location: "Nakuru County",
-      dataSource: "manual",
-    },
+  console.log("🌤️   Inserting weather records (10 farmers × 30 days)...");
 
-    // Farmer 3 - Meru
-    {
-      farmerID: f3.customerID,
-      recordDate: "2026-03-17",
-      temperatureCelsius: "20.00",
-      rainfallMm: "5.00",
-      humidity: "80.00",
-      weatherCondition: "Cloudy",
-      windSpeedKph: "9.00",
-      location: "Meru County",
-      dataSource: "manual",
-    },
-    {
-      farmerID: f3.customerID,
-      recordDate: "2026-03-22",
-      temperatureCelsius: "21.50",
-      rainfallMm: "0.00",
-      humidity: "75.00",
-      weatherCondition: "Partly Cloudy",
-      windSpeedKph: "11.00",
-      location: "Meru County",
-      dataSource: "manual",
-    },
+  const weatherInserts: any[] = [];
 
-    // Farmer 4 - Nyeri
-    {
-      farmerID: f4.customerID,
-      recordDate: "2026-03-19",
-      temperatureCelsius: "17.00",
-      rainfallMm: "12.00",
-      humidity: "88.00",
-      weatherCondition: "Rainy",
-      windSpeedKph: "18.00",
-      location: "Nyeri County",
-      dataSource: "manual",
-    },
-    {
-      farmerID: f4.customerID,
-      recordDate: "2026-03-21",
-      temperatureCelsius: "18.50",
-      rainfallMm: "3.00",
-      humidity: "82.00",
-      weatherCondition: "Partly Cloudy",
-      windSpeedKph: "14.00",
-      location: "Nyeri County",
-      dataSource: "manual",
-    },
+  for (let fi = 0; fi < farmerRows.length; fi++) {
+    const farmer = farmerRows[fi];
+    const profile = FARMER_PROFILES[fi];
 
-    // Farmer 5 - Kisumu
-    {
-      farmerID: f5.customerID,
-      recordDate: "2026-03-18",
-      temperatureCelsius: "26.00",
-      rainfallMm: "0.00",
-      humidity: "70.00",
-      weatherCondition: "Sunny",
-      windSpeedKph: "14.00",
-      location: "Kisumu County",
-      dataSource: "manual",
-    },
-    {
-      farmerID: f5.customerID,
-      recordDate: "2026-03-20",
-      temperatureCelsius: "27.50",
-      rainfallMm: "0.00",
-      humidity: "68.00",
-      weatherCondition: "Clear",
-      windSpeedKph: "12.00",
-      location: "Kisumu County",
-      dataSource: "manual",
-    },
-  ];
+    for (let day = 1; day <= 30; day++) {
+      const condition = pick(KIAMBU_WEATHER.conditions);
+      const isRainy = condition === "Rainy";
+      const isMisty = condition === "Misty";
 
-  await db.insert(WeatherRecordsTable).values(weatherData);
+      weatherInserts.push({
+        farmerID: farmer.customerID,
+        recordDate: dateStr(day),
+        temperatureCelsius: rand(
+          KIAMBU_WEATHER.tempRange[0],
+          KIAMBU_WEATHER.tempRange[1],
+        ).toFixed(2),
+        rainfallMm: isRainy
+          ? rand(6, KIAMBU_WEATHER.rainRange[1]).toFixed(2)
+          : isMisty
+            ? rand(1, 5).toFixed(2)
+            : rand(0, 1).toFixed(2),
+        humidity: isRainy
+          ? rand(78, 94).toFixed(2)
+          : isMisty
+            ? rand(70, 85).toFixed(2)
+            : rand(55, 75).toFixed(2),
+        weatherCondition: condition,
+        windSpeedKph: rand(6, 18).toFixed(2),
+        location: profile.farmLocation,
+        dataSource: "openweather",
+      });
+    }
+  }
 
-  // ── 7. Insert Payments ────────────────────────────────────────────────────
-  console.log("💰 Creating payments...");
-  const paymentsData = [
-    {
-      farmerID: f1.customerID,
+  for (let i = 0; i < weatherInserts.length; i += CHUNK) {
+    await db
+      .insert(WeatherRecordsTable)
+      .values(weatherInserts.slice(i, i + CHUNK));
+  }
+  console.log(`   ✅  ${weatherInserts.length} weather records inserted`);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  6. PAYMENTS — 2 per farmer (Week 1 & Weeks 2-3)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  console.log("💰  Inserting payments (2 per farmer)...");
+
+  const paymentMethods = ["M-Pesa", "Bank Transfer", "Cash"];
+  const paymentInserts: any[] = [];
+
+  for (let fi = 0; fi < farmerRows.length; fi++) {
+    const farmer = farmerRows[fi];
+    const profile = FARMER_PROFILES[fi];
+    const method1 = paymentMethods[fi % 3];
+    const method2 = paymentMethods[(fi + 1) % 3];
+
+    // Week 1 (Apr 1–7)
+    const w1Liters = parseFloat(
+      (rand(profile.liters[0], profile.liters[1]) * 7).toFixed(2),
+    );
+    const w1Amount = parseFloat((w1Liters * profile.price).toFixed(2));
+    const w1Deduct = profile.grade === "Grade B" ? 200 : 0;
+    const w1Bonus = profile.grade === "Grade A" && w1Liters > 196 ? 500 : 0;
+    const w1Net = parseFloat((w1Amount - w1Deduct + w1Bonus).toFixed(2));
+
+    paymentInserts.push({
+      farmerID: farmer.customerID,
       processedBy: admin.customerID,
-      amount: "7050.00",
+      amount: w1Amount.toFixed(2),
       paymentStatus: "Completed" as const,
-      paymentMethod: "M-Pesa",
-      transactionID: "MPE001234567",
-      paymentPeriod: "March 2026 - Week 3",
-      totalLitersSupplied: "141.00",
-      averagePricePerLiter: "50.00",
-      deductions: "0.00",
-      bonuses: "500.00",
-      netAmount: "7550.00",
-      paymentNotes: "Bonus for consistent Grade A quality",
-    },
-    {
-      farmerID: f2.customerID,
-      processedBy: admin.customerID,
-      amount: "4550.00",
-      paymentStatus: "Completed" as const,
-      paymentMethod: "Bank Transfer",
-      transactionID: "TRF00987654",
-      paymentPeriod: "March 2026 - Week 3",
-      totalLitersSupplied: "91.00",
-      averagePricePerLiter: "50.00",
-      deductions: "200.00",
-      deductionReason: "Quality deduction for 1 disputed batch",
-      bonuses: "0.00",
-      netAmount: "4350.00",
-      paymentNotes: "Improved quality towards end of week",
-    },
-    {
-      farmerID: f3.customerID,
-      processedBy: admin.customerID,
-      amount: "10325.00",
-      paymentStatus: "Pending" as const,
-      paymentMethod: "M-Pesa",
-      transactionID: null,
-      paymentPeriod: "March 2026 - Week 3",
-      totalLitersSupplied: "206.50",
-      averagePricePerLiter: "50.00",
-      deductions: "0.00",
-      bonuses: "1000.00",
-      netAmount: "11325.00",
-      paymentNotes: "Bonus for highest volume and consistent quality",
-    },
-    {
-      farmerID: f4.customerID,
-      processedBy: admin.customerID,
-      amount: "4525.00",
-      paymentStatus: "Pending" as const,
-      paymentMethod: "Cash",
-      transactionID: null,
-      paymentPeriod: "March 2026 - Week 3",
-      totalLitersSupplied: "90.50",
-      averagePricePerLiter: "50.00",
-      deductions: "0.00",
-      bonuses: "0.00",
-      netAmount: "4525.00",
-      paymentNotes: "Good improvement in quality",
-    },
-    {
-      farmerID: f5.customerID,
-      processedBy: admin.customerID,
-      amount: "7575.00",
-      paymentStatus: "Completed" as const,
-      paymentMethod: "M-Pesa",
-      transactionID: "MPE005678901",
-      paymentPeriod: "March 2026 - Week 3",
-      totalLitersSupplied: "151.50",
-      averagePricePerLiter: "50.00",
-      deductions: "0.00",
-      bonuses: "375.00",
-      netAmount: "7950.00",
-      paymentNotes: "Bonus for consistent high quality",
-    },
-  ];
+      paymentMethod: method1,
+      transactionID:
+        method1 === "M-Pesa"
+          ? `MPE2604W1${String(fi + 1).padStart(3, "0")}`
+          : method1 === "Bank Transfer"
+            ? `TRF2604W1${String(fi + 1).padStart(3, "0")}`
+            : null,
+      paymentPeriod: "April 2026 - Week 1 (Apr 1-7)",
+      totalLitersSupplied: w1Liters.toFixed(2),
+      averagePricePerLiter: profile.price.toFixed(2),
+      deductions: w1Deduct.toFixed(2),
+      deductionReason:
+        w1Deduct > 0
+          ? "Quality deduction — Grade B collections in Week 1"
+          : null,
+      bonuses: w1Bonus.toFixed(2),
+      netAmount: w1Net.toFixed(2),
+      paymentNotes:
+        w1Bonus > 0
+          ? "Bonus for exceeding 196L volume target in Week 1"
+          : w1Deduct > 0
+            ? "Deduction applied for below-grade collections"
+            : "Standard weekly payment — processed on schedule",
+    });
 
-  await db.insert(PaymentsTable).values(paymentsData);
+    // Weeks 2-3 (Apr 8–21)
+    const w2Liters = parseFloat(
+      (rand(profile.liters[0], profile.liters[1]) * 14).toFixed(2),
+    );
+    const w2Amount = parseFloat((w2Liters * profile.price).toFixed(2));
+    const w2Deduct = profile.grade === "Grade B" ? 350 : 0;
+    const w2Bonus =
+      profile.grade === "Grade A" && w2Liters > 420
+        ? 1000
+        : profile.grade === "Grade A"
+          ? 250
+          : 0;
+    const w2Net = parseFloat((w2Amount - w2Deduct + w2Bonus).toFixed(2));
+    const w2Status: "Completed" | "Pending" = fi < 7 ? "Completed" : "Pending";
 
-  // ── 8. Insert Support Tickets ─────────────────────────────────────────────
-  console.log("🎫 Creating support tickets...");
-  const ticketsData = [
+    paymentInserts.push({
+      farmerID: farmer.customerID,
+      processedBy: admin.customerID,
+      amount: w2Amount.toFixed(2),
+      paymentStatus: w2Status,
+      paymentMethod: method2,
+      transactionID:
+        w2Status === "Completed"
+          ? method2 === "M-Pesa"
+            ? `MPE2604W2${String(fi + 1).padStart(3, "0")}`
+            : method2 === "Bank Transfer"
+              ? `TRF2604W2${String(fi + 1).padStart(3, "0")}`
+              : null
+          : null,
+      paymentPeriod: "April 2026 - Weeks 2-3 (Apr 8-21)",
+      totalLitersSupplied: w2Liters.toFixed(2),
+      averagePricePerLiter: profile.price.toFixed(2),
+      deductions: w2Deduct.toFixed(2),
+      deductionReason:
+        w2Deduct > 0
+          ? "Quality deduction — Grade B collections in Weeks 2-3"
+          : null,
+      bonuses: w2Bonus.toFixed(2),
+      netAmount: w2Net.toFixed(2),
+      paymentNotes:
+        w2Status === "Pending"
+          ? "Payment scheduled — to be processed by April 25th"
+          : w2Bonus >= 1000
+            ? "High-volume bonus: exceeded 420L across Weeks 2-3"
+            : w2Bonus > 0
+              ? "Grade A consistency bonus applied"
+              : "Standard bi-weekly payment",
+    });
+  }
+
+  await db.insert(PaymentsTable).values(paymentInserts);
+  console.log(`   ✅  ${paymentInserts.length} payment records inserted`);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  7. SUPPORT TICKETS — all 10 farmers, Kiambu-specific context
+  // ══════════════════════════════════════════════════════════════════════════
+
+  console.log("🎫  Inserting support tickets...");
+
+  const ticketInserts: any[] = [
+    // Farmer 1 — Limuru — Resolved payment query
     {
-      farmerID: f1.customerID,
-      subject: "Payment confirmation for Week 3",
+      farmerID: farmerRows[0].customerID,
+      subject: "Confirm April Week 1 M-Pesa payment — Limuru",
       description:
-        "I would like to confirm that my payment for Week 3 has been processed correctly.",
+        "I received an SMS about my Week 1 payment but the amount looks different from my own calculation. Can you confirm the full breakdown including any bonus for my Limuru farm?",
       status: "Resolved" as const,
       priority: "Low",
       category: "Payment Query",
       assignedTo: admin.customerID,
       response:
-        "Your payment of KSh 7,550 was processed on March 23rd via M-Pesa. Transaction ID: MPE001234567.",
-      resolution: "Payment confirmed. Farmer satisfied with response.",
-      resolvedAt: "2026-03-23 10:30:00",
+        "Hi John, your Week 1 payment included your base milk earnings from your Limuru farm plus a KSh 500 bonus for exceeding the 196L volume target. The M-Pesa transaction was sent to 0711111111. Please check your M-Pesa statement for the exact amount.",
+      resolution:
+        "Farmer confirmed receipt of payment and understood the bonus breakdown. Ticket closed.",
+      resolvedAt: "2026-04-10 10:30:00",
     },
+
+    // Farmer 2 — Githunguri — High priority dispute
     {
-      farmerID: f2.customerID,
-      subject: "Dispute on March 19th collection quality grading",
+      farmerID: farmerRows[1].customerID,
+      subject:
+        "Collection graded Grade C — disputing the decision (Githunguri)",
       description:
-        "My March 19th collection was graded as Grade C and disputed due to temperature. I believe my cooling system was working properly.",
+        "One of my April collections from my Githunguri farm was downgraded to Grade C due to temperature. My cooling equipment was serviced last week by a technician in Githunguri town and was confirmed working correctly. I want a full review and payment without deductions.",
       status: "In Progress" as const,
       priority: "High",
       category: "Collection Issue",
       assignedTo: admin.customerID,
       response:
-        "We are reviewing the temperature logs and will visit your farm to check the cooling equipment.",
+        "Hi Mary, we have noted your dispute and escalated it. We are reviewing the temperature log from the collection vehicle that serves the Githunguri route. A farm visit is scheduled for April 18th to inspect your cooling equipment. We will update you within 48 hours of the visit.",
       resolution: null,
       resolvedAt: null,
     },
+
+    // Farmer 3 — Kikuyu — Bonus explanation
     {
-      farmerID: f4.customerID,
-      subject: "How do I improve my milk fat content?",
+      farmerID: farmerRows[2].customerID,
+      subject: "Bonus calculation query — Kikuyu farm",
       description:
-        "My collections have been Grade B. I want to improve to Grade A consistently. What feeding changes should I make?",
-      status: "Resolved" as const,
-      priority: "Medium",
-      category: "General",
-      assignedTo: admin.customerID,
-      response:
-        "Consider increasing Dairy Meal to 5kg per day and adding Lucerne (8kg) in the evening. Also ensure cows have constant access to clean water (40-60L per cow daily).",
-      resolution:
-        "Farmer advised on improved feeding regimen. Will follow up in 2 weeks to check results.",
-      resolvedAt: "2026-03-22 14:00:00",
-    },
-    {
-      farmerID: f3.customerID,
-      subject: "Request for bonus payment details",
-      description:
-        "I see a bonus mentioned in my payment summary. Can you explain how the bonus system works?",
+        "I noticed a KSh 1,000 bonus in my Weeks 2-3 payment. I want to understand how bonuses are calculated so I can plan my Kikuyu farm operations to consistently earn them.",
       status: "Resolved" as const,
       priority: "Low",
       category: "Payment Query",
       assignedTo: admin.customerID,
       response:
-        "Bonuses are awarded for: (1) Consistent Grade A quality, (2) High volume (>200L per week), (3) Zero disputes. You earned all three this week!",
-      resolution: "Farmer understands bonus system. Very satisfied.",
-      resolvedAt: "2026-03-23 11:15:00",
+        "Hi Peter! Our bonus system: (1) Grade A consistency all week = KSh 500, (2) Total volume above 420L in a 2-week period = KSh 1,000, (3) Zero disputes in the period = KSh 250. Your Kikuyu farm earned the high-volume bonus this cycle. Keep it up — you are one of our top performers!",
+      resolution:
+        "Farmer fully understands the bonus system. Very motivated. Ticket closed.",
+      resolvedAt: "2026-04-17 14:00:00",
     },
+
+    // Farmer 4 — Ruiru — Urgent equipment
     {
-      farmerID: f5.customerID,
-      subject: "Equipment maintenance schedule",
+      farmerID: farmerRows[3].customerID,
+      subject: "Cooling tank thermostat fluctuating — urgent (Ruiru)",
       description:
-        "When is the next maintenance visit for the cooling equipment?",
+        "My cooling tank at my Ruiru farm has a thermostat that keeps fluctuating between 4°C and 7°C. I am very worried my milk will be downgraded. Can someone from the Ruiru area come to check the equipment urgently, or at least advise me on immediate steps to prevent spoilage?",
+      status: "Open" as const,
+      priority: "High",
+      category: "General",
+      assignedTo: null,
+      response: null,
+      resolution: null,
+      resolvedAt: null,
+    },
+
+    // Farmer 5 — Thika — Extra collection request
+    {
+      farmerID: farmerRows[4].customerID,
+      subject: "Request for Sunday collection — Thika farm",
+      description:
+        "My Thika farm herd has grown to 10 Sahiwal cows producing 30+ litres daily. My storage cannot handle the full weekend without collection. I would like to formally request a Sunday collector to cover the Thika route in addition to weekdays.",
+      status: "Open" as const,
+      priority: "Medium",
+      category: "General",
+      assignedTo: null,
+      response: null,
+      resolution: null,
+      resolvedAt: null,
+    },
+
+    // Farmer 6 — Lari — Feeding advice
+    {
+      farmerID: farmerRows[5].customerID,
+      subject: "Which feeds improve fat content for Jersey cows in Lari?",
+      description:
+        "My Jersey cows at my Lari farm are producing Grade A milk but I want to improve the fat percentage from 4.0% to above 4.5%. What additional feeds do you recommend and where can I source them within Lari or nearby Limuru?",
+      status: "Resolved" as const,
+      priority: "Medium",
+      category: "General",
+      assignedTo: admin.customerID,
+      response:
+        "Hi Faith! For Jersey cows in the Lari highlands targeting higher fat content: (1) Increase Lucerne to 10kg/day — it grows well in the Lari area, (2) Add Cotton Seed Cake 2kg each afternoon, (3) Try Brewers Grain 3kg/day if available. You can source these from Limuru Agrovet on Limuru Road or the Lari market cooperative. Ensure 50L+ of clean water per cow daily.",
+      resolution:
+        "Farmer received specific feeding recommendations with local Lari/Limuru sourcing details. Follow-up scheduled April 30th. Ticket closed.",
+      resolvedAt: "2026-04-12 09:00:00",
+    },
+
+    // Farmer 7 — Gatundu — Payment method change
+    {
+      farmerID: farmerRows[6].customerID,
+      subject: "Change payment method to bank transfer — Gatundu farm",
+      description:
+        "I would like to change my payment from M-Pesa to direct bank transfer for my Gatundu farm payments going forward. My details: Equity Bank, Gatundu Branch, Account Number 0260299467384.",
+      status: "In Progress" as const,
+      priority: "Medium",
+      category: "Payment Query",
+      assignedTo: admin.customerID,
+      response:
+        "Hi David, thank you for your request. For security we need to verify your Equity Bank Gatundu branch account details before updating our records. Please bring your bank statement or passbook to the collection centre on your next visit to verify. We will process the change within 3 business days of verification.",
+      resolution: null,
+      resolvedAt: null,
+    },
+
+    // Farmer 8 — Kabete — Grade improvement
+    {
+      farmerID: farmerRows[7].customerID,
+      subject: "How to improve from Grade B to Grade A — Kabete farm",
+      description:
+        "My Kabete farm collections keep being graded Grade B and I keep getting deductions. I have 4 Guernsey cows and want to reach Grade A consistently. What specific feeding and farm management changes should I make for the Kabete climate?",
+      status: "Resolved" as const,
+      priority: "Medium",
+      category: "Collection Issue",
+      assignedTo: admin.customerID,
+      response:
+        "Hi Agnes! For your Guernsey cows at Kabete: (1) Increase Dairy Meal from 3kg to 5kg/day, (2) Add Lucerne 8kg each evening — readily available from Kabete Agrovet, (3) Cool milk below 4°C within 1 hour of milking (Kabete's cool climate actually helps with this), (4) Clean milking equipment with hot water and sanitizer after every session, (5) Wash and dry udder before milking. Guernsey cows naturally produce high-fat milk so the main issue is likely temperature control and hygiene.",
+      resolution:
+        "Comprehensive advice given with Kabete-specific sourcing. Farm visit scheduled April 20th. Ticket closed.",
+      resolvedAt: "2026-04-14 11:30:00",
+    },
+
+    // Farmer 9 — Kiambaa — Pending payment
+    {
+      farmerID: farmerRows[8].customerID,
+      subject:
+        "Weeks 2-3 payment still Pending — Kiambaa farm (4 days overdue)",
+      description:
+        "My payment for April Weeks 2 and 3 from my Kiambaa farm has been showing as Pending in the app for 4 days. The expected processing date was April 22nd and the funds have not arrived. Can you confirm the status and when I will receive the payment?",
+      status: "Open" as const,
+      priority: "High",
+      category: "Payment Query",
+      assignedTo: null,
+      response: null,
+      resolution: null,
+      resolvedAt: null,
+    },
+
+    // Farmer 10 — Karuri — Maintenance schedule
+    {
+      farmerID: farmerRows[9].customerID,
+      subject: "Next equipment maintenance visit — Karuri area",
+      description:
+        "I would like to know the schedule for the next equipment maintenance visit covering the Karuri area. My milk cooling tank is due for a full service check — it has been 6 months since the last service and with the April long rains expected I want to ensure everything is in order.",
       status: "Open" as const,
       priority: "Low",
       category: "General",
@@ -835,38 +871,53 @@ async function seed() {
     },
   ];
 
-  await db.insert(CustomerSupportTicketsTable).values(ticketsData);
+  await db.insert(CustomerSupportTicketsTable).values(ticketInserts);
+  console.log(`   ✅  ${ticketInserts.length} support tickets inserted`);
 
-  // ── Done ──────────────────────────────────────────────────────────────────
-  console.log("✅ Seeding complete!");
-  console.log("════════════════════════════════════════════════════════");
-  console.log("👤 Admin:    admin@gmail.com / bryson");
-  console.log("🧑‍🌾 Farmers: farmer1@gmail.com → farmer5@gmail.com / bryson");
-  console.log("────────────────────────────────────────────────────────");
-  console.log(`🥛 Milk records:     ${milkRecords.length} total`);
-  console.log(`   Farmer 1 (John):    5 collections`);
-  console.log(`   Farmer 2 (Mary):    5 collections`);
-  console.log(`   Farmer 3 (Peter):   6 collections`);
-  console.log(`   Farmer 4 (Grace):   4 collections`);
-  console.log(`   Farmer 5 (Samuel):  5 collections`);
-  console.log("────────────────────────────────────────────────────────");
-  console.log(`🌿 Feeding records:  ${feedingData.length}`);
-  console.log(`🌤️  Weather records:  ${weatherData.length}`);
-  console.log(`💰 Payments:         ${paymentsData.length}`);
-  console.log(`🎫 Tickets:          ${ticketsData.length}`);
-  console.log("────────────────────────────────────────────────────────");
-  console.log("🐄 Cow breeds by farmer:");
-  console.log("   farmer1@gmail.com → Friesian (8 cows)");
-  console.log("   farmer2@gmail.com → Ayrshire (5 cows)");
-  console.log("   farmer3@gmail.com → Holstein (12 cows)");
-  console.log("   farmer4@gmail.com → Crossbreed (6 cows)");
-  console.log("   farmer5@gmail.com → Sahiwal (10 cows)");
-  console.log("════════════════════════════════════════════════════════");
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SUMMARY
+  // ══════════════════════════════════════════════════════════════════════════
+
+  console.log(
+    "\n════════════════════════════════════════════════════════════════",
+  );
+  console.log("✅  Seed complete — April 2026 | Kiambu County");
+  console.log(
+    "════════════════════════════════════════════════════════════════",
+  );
+  console.log("👤  Admin:    brysongathuku189@gmail.com  /  bryson20");
+  console.log(
+    "🧑‍🌾  Farmers:  farmer1@gmail.com → farmer10@gmail.com  /  bryson20",
+  );
+  console.log(
+    "────────────────────────────────────────────────────────────────",
+  );
+  console.log(
+    `🥛  Milk records:     ${milkRecords.length}  (10 farmers × 30 days)`,
+  );
+  console.log(`🌿  Feeding habits:   ${feedInserts.length}`);
+  console.log(
+    `🌤️   Weather records:  ${weatherInserts.length}  (10 farmers × 30 days)`,
+  );
+  console.log(`💰  Payments:         ${paymentInserts.length}  (2 per farmer)`);
+  console.log(`🎫  Support tickets:  ${ticketInserts.length}`);
+  console.log(
+    "────────────────────────────────────────────────────────────────",
+  );
+  console.log("📍  Farmer locations (all Kiambu County):");
+  FARMER_PROFILES.forEach((p) => {
+    console.log(
+      `    ${p.email.padEnd(24)}  ${p.farmLocation.padEnd(30)}  ${p.numberOfCows} cows  ${p.cowBreed}`,
+    );
+  });
+  console.log(
+    "════════════════════════════════════════════════════════════════\n",
+  );
 
   process.exit(0);
 }
 
 seed().catch((err) => {
-  console.error("❌ Seed failed:", err);
+  console.error("❌  Seed failed:", err);
   process.exit(1);
 });
