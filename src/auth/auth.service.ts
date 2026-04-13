@@ -5,8 +5,8 @@ import { TICustomer, CustomersTable, TSCustomer } from "../Drizzle/schema";
 
 // Register a customer (farmer or admin)
 export const createCustomerService = async (user: TICustomer) => {
-  await db.insert(CustomersTable).values(user);
-  return "Customer added successfully";
+  const result = await db.insert(CustomersTable).values(user).returning(); // ✅ FIXED: returns the created row so controller knows it succeeded
+  return result[0] ?? null;
 };
 
 // Verify customer account
@@ -14,7 +14,7 @@ export const verifyCustomerService = async (email: string) => {
   await db
     .update(CustomersTable)
     .set({ isVerified: true, verificationCode: null })
-    .where(sql`${CustomersTable.email} = ${email}`);
+    .where(eq(CustomersTable.email, email)); // ✅ FIXED: use eq() instead of raw sql
 };
 
 // Customer login service (not currently used but kept for consistency)
@@ -32,7 +32,7 @@ export const customerLoginService = async (customer: TSCustomer) => {
       isVerified: true,
       isActive: true,
     },
-    where: sql`${CustomersTable.email} = ${email}`,
+    where: eq(CustomersTable.email, email), // ✅ FIXED: use eq() instead of raw sql
   });
 };
 
@@ -72,7 +72,7 @@ export const getCustomerByIdService = async (id: number) => {
 // Get customer by email
 export const getCustomerByEmailService = async (email: string) => {
   return await db.query.CustomersTable.findFirst({
-    where: sql`${CustomersTable.email} = ${email}`,
+    where: eq(CustomersTable.email, email), // ✅ FIXED: use eq() instead of raw sql
   });
 };
 
@@ -101,7 +101,7 @@ export const deleteCustomerService = async (id: number) => {
 // Get all farmers (users only)
 export const getFarmersService = async () => {
   const farmers = await db.query.CustomersTable.findMany({
-    where: sql`${CustomersTable.role} = 'user'`,
+    where: eq(CustomersTable.role, "user"), // ✅ FIXED: use eq() instead of raw sql
     columns: {
       customerID: true,
       firstName: true,
@@ -126,7 +126,7 @@ export const getFarmersService = async () => {
 // Get all admins/collectors (admins only)
 export const getAdminsService = async () => {
   const admins = await db.query.CustomersTable.findMany({
-    where: sql`${CustomersTable.role} = 'admin'`,
+    where: eq(CustomersTable.role, "admin"), // ✅ FIXED: use eq() instead of raw sql
     columns: {
       customerID: true,
       firstName: true,

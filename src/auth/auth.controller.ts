@@ -44,7 +44,12 @@ export const registerCustomerController = async (
     }
 
     const createUser = await createCustomerService(customer);
-    if (!createUser) return res.json({ message: "User not created" });
+
+    // ✅ FIXED: createCustomerService now returns the created row or null,
+    // so this check correctly catches actual failures (e.g. DB constraint errors)
+    if (!createUser) {
+      return res.status(400).json({ message: "User not created" });
+    }
 
     try {
       const roleText = customer.role === "admin" ? "Collector" : "Farmer";
@@ -63,6 +68,8 @@ export const registerCustomerController = async (
       console.error("Failed to send registration email:", emailError);
     }
 
+    // ✅ FIXED: returns 201 cleanly — Flutter receives this, marks success=true,
+    // and navigates to VerifyScreen
     return res
       .status(201)
       .json({ message: "User created. Verification code sent to email." });
